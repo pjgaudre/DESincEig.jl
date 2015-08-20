@@ -49,11 +49,11 @@ SincEigen(x->x.^2+x.^4,ones,Infinite2SL,[Beta,Beta],[gamma,gamma],dopt)
 
 # References:
 
-1.  N. Eggert, M. Jarratt, and J. Lund. <a href="http://dx.doi.org/10.1016/0021-9991(87)90163-X"> Sinc function computation of the eigenvalues of Sturm-Liouville problems</a>. SIAM Journal of Computational Physics, 69:209-229, 1987
-2.  P. Gaudreau, R.M. Slevinsky, and H. Safouhi. <a href="http://arxiv.org/abs/1409.7471v3"> The Double Exponential Sinc Collocation Method for Singular Sturm-Liouville Problems</a>. arXiv:1409.7471v2, 2014
-3.  R. M. Slevinsky and S. Olver. <a href="http://dx.doi.org/10.1137/140978363">On the use of conformal maps for the acceleration of convergence of the trapezoidal rule and Sinc numerical methods</a>, SIAM J. Sci. Comput., 37:A676--A700, 2015. An earlier version appears here: <a href="http://arxiv.org/abs/1406.3320"> arXiv:1406.3320</a>.
-4.  R.M. Corless, G.H. Gonnet, D.E.G. Hare, D.J. Jeffrey, D.E. Knuth, <a href="http://link.springer.com/article/10.1007%2FBF02124750"> On the Lambert W function</a>. Advances in Computational Mathematics, 5(1):329-359, 1996.
-5.  P. Gaudreau, R.M. Slevinsky, and H. Safouhi, <a href="http://dx.doi.org/10.1016/j.aop.2015.05.026"> Computing energy eigenvalues of anharmonic oscillators using the double exponential Sinc collocation method</a>, Annals of Physics, 360:520-538, 2015.
+1.  N. Eggert, M. Jarratt, and J. Lund. <a href="http://dx.doi.org/10.1016/0021-9991(87)90163-X"> Sinc function computation       of the eigenvalues of Sturm-Liouville problems</a>. SIAM Journal of Computational Physics, 69:209-229, 1987
+2.  P. Gaudreau, R.M. Slevinsky, and H. Safouhi. <a href="http://arxiv.org/abs/1409.7471v3"> The Double Exponential Sinc       Collocation Method for Singular Sturm-Liouville Problems</a>. arXiv:1409.7471v2, 2014
+3.  R. M. Slevinsky and S. Olver. <a href="http://dx.doi.org/10.1137/140978363">On the use of conformal maps for the               acceleration of convergence of the trapezoidal rule and Sinc numerical methods</a>, SIAM J. Sci. Comput.,                    37:A676--A700, 2015. An earlier version appears here: <a href="http://arxiv.org/abs/1406.3320"> arXiv:1406.3320</a>.
+4.  R.M. Corless, G.H. Gonnet, D.E.G. Hare, D.J. Jeffrey, D.E. Knuth, <a                                                           href="http://link.springer.com/article/10.1007%2FBF02124750"> On the Lambert W function</a>. Advances in Computational       Mathematics, 5(1):329-359, 1996.
+5.  P. Gaudreau, R.M. Slevinsky, and H. Safouhi, <a href="http://dx.doi.org/10.1016/j.aop.2015.05.026"> Computing energy           eigenvalues of anharmonic oscillators using the double exponential Sinc collocation method</a>, Annals of Physics,           360:520-538, 2015.
 
 
 
