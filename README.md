@@ -29,7 +29,7 @@ using DESincEig
 ```
 ### Example 1 from <a href="http://dx.doi.org/10.1016/j.aop.2015.05.026">[5]</a>
 
-Suppose we are interested in computing the energy eigenvalues ```E``` of Schrodinger equation:
+Suppose we are interested in computing the energy eigenvalues ```E``` of Schrödinger equation:
 
 ```julia
 (-D^2 + V(x) ) ψ(x) = E ψ(x),  with  ψ(±∞) = 0
@@ -41,11 +41,9 @@ V(x) = x^2 + x^4,
 We use the package function `SincEigen` to calculate the Eigenvalues:
 
 ```julia
-
 gamma = 2.0
 Beta = (0.5)^gamma / gamma
 dopt = pi/2gamma
-
 SincEigen(x->x.^2+x.^4,ones,Infinite2SL,[Beta,Beta],[gamma,gamma],dopt)
 ```
 
