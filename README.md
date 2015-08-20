@@ -4,7 +4,8 @@ The purpose of this `Julia` package is to provide an efficient fast general purp
 
 The primary function of this module computes the eigenvalues of a general Sturm-Liouville problem of the form:
 ```julia
-P1 : (-D^2 + q(x) ) u(x) = λ ρ(x) u(x),  a < x < b,   with   u(a) = u(b) = 0,     where -∞ ≦ a < b ≦ ∞  .
+P1 : (-D^2 + q(x) ) u(x) = λ ρ(x) u(x),  a < x < b,   with   u(a) = u(b) = 0, 
+      where -∞ ≦ a < b ≦ ∞  .
 In the problem P1,
 1. D is the differential operator, an
 2. q(x) is a continuous bounded function defined on (a,b)
@@ -20,9 +21,46 @@ In the problem P2,
 3. ρtilde(x) is the resulting transformed function defined on (-∞,∞)
 4. v(x) are the eigenfunction corresponding to the eigenvalues λ.
 ```
-Now, ``` v(x) ``` has double expoenential decay at both infinities. See reference [2] for more details of the form of ``` qtilde(x)``` and ``` ρtilde(x)```.
+Now, ```v(x)``` has double expoenential decay at both infinities. See reference [2] for more details of the form of ```qtilde(x)``` and ```ρtilde(x)```.
 
 To use this package, once simply writes:
 ```julia
 using DESincEig
 ```
+### Example 1 from <a href="http://dx.doi.org/10.1016/j.aop.2015.05.026">[5]</a>
+
+Suppose we are interested in computing the energy eigenvalues ```E``` of Schrodinger equation:
+
+```julia
+(-D^2 + V(x) ) ψ(x) = E ψ(x),  with  ψ(±∞) = 0
+```
+for the potential:
+```julia
+V(x) = x^2 + x^4,
+```
+We use the package function `SincEigen` to calculate the Eigenvalues:
+
+```julia
+c = [1.0, 1.0]
+gamma = length(c) + 1.0
+Beta = sqrt(c[end])*(1/2)^gamma / gamma
+dopt = pi/2gamma
+
+function V{T<:Number}(t::Array{T,1},c::Array{T,1})
+l = length(c)
+t.^([2:2:2l]')*c
+end
+
+SincEigen(t->V(t,c),ones,Infinite2SL,[Beta,Beta],[gamma,gamma],dopt)
+```
+
+# References:
+
+1.  N. Eggert, M. Jarratt, and J. Lund. <a href="http://dx.doi.org/10.1016/0021-9991(87)90163-X"> Sinc function computation of the eigenvalues of Sturm-Liouville problems</a>. SIAM Journal of Computational Physics, 69:209-229, 1987
+2.  P. Gaudreau, R.M. Slevinsky, and H. Safouhi. <a href="http://arxiv.org/abs/1409.7471v3"> The Double Exponential Sinc Collocation Method for Singular Sturm-Liouville Problems</a>. arXiv:1409.7471v2, 2014
+3.  R. M. Slevinsky and S. Olver. <a href="http://dx.doi.org/10.1137/140978363">On the use of conformal maps for the acceleration of convergence of the trapezoidal rule and Sinc numerical methods</a>, SIAM J. Sci. Comput., 37:A676--A700, 2015. An earlier version appears here: <a href="http://arxiv.org/abs/1406.3320"> arXiv:1406.3320</a>.
+4.  R.M. Corless, G.H. Gonnet, D.E.G. Hare, D.J. Jeffrey, D.E. Knuth, <a href="http://link.springer.com/article/10.1007%2FBF02124750"> On the Lambert W function</a>. Advances in Computational Mathematics, 5(1):329-359, 1996.
+5.  P. Gaudreau, R.M. Slevinsky, and H. Safouhi, <a href="http://dx.doi.org/10.1016/j.aop.2015.05.026"> Computing energy eigenvalues of anharmonic oscillators using the double exponential Sinc collocation method</a>, Annals of Physics, 360:520-538, 2015.
+
+
+
