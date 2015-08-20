@@ -41,17 +41,12 @@ V(x) = x^2 + x^4,
 We use the package function `SincEigen` to calculate the Eigenvalues:
 
 ```julia
-c = [1.0, 1.0]
-gamma = length(c) + 1.0
-Beta = sqrt(c[end])*(1/2)^gamma / gamma
+
+gamma = 2.0
+Beta = (0.5)^gamma / gamma
 dopt = pi/2gamma
 
-function V{T<:Number}(t::Array{T,1},c::Array{T,1})
-l = length(c)
-t.^([2:2:2l]')*c
-end
-
-SincEigen(t->V(t,c),ones,Infinite2SL,[Beta,Beta],[gamma,gamma],dopt)
+SincEigen(x->x.^2+x.^4,ones,Infinite2SL,[Beta,Beta],[gamma,gamma],dopt)
 ```
 
 # References:
