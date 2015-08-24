@@ -79,14 +79,14 @@ Suppose we are interested in computing the energy eigenvalues ```E``` of Schröd
 ```julia
 (-D^2 + V(x) ) ψ(x) = E ψ(x),  with  ψ(±∞) = 0
 ```
-for the potential:
+for the quartic anharmonic oscillator potential:
 ```julia
 V(x) = x^2 + x^4,
 ```
 We use the package function `SincEigen` to calculate the Eigenvalues:
 
 ```julia
-SincEigen( x->x.^2+x.^4 , ones , Infinite2SL , [0.125,0.125] , [2.0,2.0] , pi/4 )
+SincEigen( x -> x.^2 + x.^4 , ones , Infinite2SL , [0.125,0.125] , [2.0,2.0] , pi/4 )
 ```
 
 # References:
