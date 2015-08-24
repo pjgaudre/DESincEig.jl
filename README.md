@@ -1,6 +1,6 @@
 # DESincEig
 
-The purpose of this `Julia` package is to provide an efficient fast general purpose differential eigenvalue solver package, supporting the canonical interval, and semi-infinite and infinite domains for Sturm-Liouville problems. The following algorithm utilizes the Double Exponential Sinc-Collocation method. This package allows the user to consider other domains by declaring a new instance of the type `Domain`.
+The purpose of this `Julia` package is to provide an efficient fast general purpose differential eigenvalue solver package, supporting the canonical interval, and semi-infinite and infinite domains for Sturm-Liouville problems. The following algorithm utilizes the Double Exponential Sinc-Collocation method. This package allows the user to consider other domains by declaring a new instance of the type `DomainSL`.
 
 The primary function of this module computes the eigenvalues of a general Sturm-Liouville problem of the form:
 ```julia
@@ -23,10 +23,83 @@ In the problem P2,
 ```
 Now, ```v(x)``` has double expoenential decay at both infinities. See reference <a href="http://arxiv.org/abs/1409.7471v3">[2]</a> for more details of the form of ```qtilde(x)``` and ```ρtilde(x)```.
 
+The type `DomainSL` is used to select from the conformal maps depending on the domain of the problem.
+Each element of type `DomainSL` is comprised of three functions:
+```julia
+ 1. ψ  : The outer map
+ 2. ψp : The derivative of ψ, (ψ prime)
+ 3. ψtilde : The first half of the resulting transformation proposed by Eggert et al.
+            ψtilde =  - sqrt{ψp} D( 1/ψp D(\sqrt{ψp}) ),
+            where D is the differential operator.
+```
+1. For S-L problems on a finite domain `I=(a,b)` with algebraic decay at the endpoints:
+`DomainSL = FiniteSL`.
+2. For S-L problems on a infinite domain `I=(-∞,∞)` with algebraic decay at the endpoints:
+`DomainSL = Infinite1SL`.
+3. For S-L problems on a infinite domain `I=(-∞,∞)` with single-exponential decay at the endpoints:
+`DomainSL = Infinite2SL`.
+4. For S-L problems on a semi-infinite domain `I=(0,∞)` with single-exponential decay at infinity and algebraic decay at 0:
+`DomainSL = SemiInfiniteSL`.
+
 To use this package, once simply writes:
 ```julia
 using DESincEig
 ```
+
+The main function of this package is `SincEigen`. This function computes the eigenvalues of the the Sturm-Liouville (P1) using the double exponential Sinc-Collocation method.
+For optimal results, it is worth performing an asymptotic analysis of the solution of P2.
+The resulting analysis will lead to the following bounds for constants `βL,βR,γL,γR>0`:
+```Julia
+ |v(x)| < AL exp(-βL exp ( γL |x| ) ) , on (-∞,0)
+ |v(x)| < AR exp(-βR exp ( γR |x| ) ) , on (0, ∞)
+ ```
+The parameters `βL, βR, γL, γR` are used in the calculation of the mesh size, `h`, for the DESCM.
+
+Another important parameter involved in the calculations of the mesh size for the DESCM is the width, `d`, of the strip `D_{d}`.
+Let `S` denote the set of complex singularities of the functions `qtilde(x)` and `ρtilde(x)`:
+`S = { z ∈ C : qtilde(z) or ρtilde(z) does not exist a.}`
+let s denote the positive imaginary part of nearest singularity to the real axis:
+`s = min | Im{S} |`,
+then `d = min{ π/2max{γL,γR} , s }`.
+```Julia
+Input:
+Necessary parameters
+1. q(x):: Function,      The function in P1
+2. ρ(x):: Function,      The function in P1
+3. domain:: DomainSL,    FiniteSL, Infinite1SL, Infinite2SL or SemiInfiniteSL
+4. βopt:: Vector{T},     [βL,βR]
+5. γopt:: Vector{T},     [γL,γR]
+6. d:: Number,           min{ π/2max{γL,γR} , s }
+____________________________________________________________________________________________________________________
+Extra parameters ( not necessary but can offer more options )
+7. enum::Vector{T},         [n,tv]: Default is [NaN,NaN]
+                            n ∈ {0,1,2,3,...} :  Eigenvalue number
+                            tv = λ_{n} : True Value for eigenvalue λ_{n}
+                            If specified, the absolute error is computed instead of the absolute error approximation
+                            of the DESCM w.r.t. to λ_{n} will be returned.
+
+8. tol::T,                  tolerance level: Default is 5e-12
+                            tol is used to find the optimal Matrix Size in order for the approximate eigenvalue
+                            μ to have an an aprroximation to the absolute error less than tol.
+
+9. Range::Vector{Integer},  [start:skip:end]: Default = [1:1:100]
+                            Will run algorithm with N or M = "start" with index jump "skip" until "end".
+
+10. u0::T                   Parameter used in the inner map construction H(t) presented above.
+                            Default = one(T)
+
+11. u::Vector{T}            Parameters used in the inner map construction H(t) presented above.
+                            Default = [zero(T)]
+
+12. Trace_Mesh::Bool         Default = false
+If true, the mesh size will be computed by minimizing the trace of the matrix D^(-1)HD^(-1).
+resulting from the DESCM. For even functions q(x) and ρ(x) and an infinite domain: DomainSL = Infinite1SL or Infinite2SL,
+once can minimize this functional to obtain an alternate mesh size: htilde. This alternate mesh-size has proven
+to be better suited for highly-oscillatory functions q(x). This functional is minimized using the Julia package: Optim.
+```
+
+
+
 ### Example 1 from <a href="http://dx.doi.org/10.1016/j.aop.2015.05.026">[5]</a>
 
 Suppose we are interested in computing the energy eigenvalues ```E``` of Schrödinger equation:
