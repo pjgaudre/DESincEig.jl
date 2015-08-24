@@ -24,18 +24,17 @@ In the problem P2,
 4. v(x) are the eigenfunction corresponding to the eigenvalues λ.
    v(x) now have double expoenential decay at both infinities.
  ```
-See reference <a href="http://arxiv.org/abs/1409.7471v3">[2]</a> for more details of the form of qtilde(x) and ρtilde(x)
+See reference <a href="http://arxiv.org/abs/1409.7471v3">[2]</a> for more details of the form of `qtilde(x)` and `ρtilde(x)`.
 
 The type `DomainSL` is used to select from the conformal maps depending on the domain of the problem and the decay rate of the solution of P1.
-
 1. For S-L problems on a finite domain `I=(a,b)` with algebraic decay at the endpoints:
-`DomainSL = FiniteSL`.
+`DomainSL = FiniteSL`. 
 
 2. For S-L problems on a infinite domain `I=(-∞,∞)` with algebraic decay at the endpoints:
-`DomainSL = Infinite1SL`.
+`DomainSL = Infinite1SL`. 
 
 3. For S-L problems on a infinite domain `I=(-∞,∞)` with single-exponential decay at the endpoints:
-`DomainSL = Infinite2SL`.
+`DomainSL = Infinite2SL`. 
 
 4. For S-L problems on a semi-infinite domain `I=(0,∞)` with single-exponential decay at infinity and algebraic decay at 0:
 `DomainSL = SemiInfiniteSL`.
@@ -56,7 +55,7 @@ The parameters `βL, βR, γL, γR` are used in the calculation of the mesh size
 
 Another important parameter involved in the calculations of the mesh size for the DESCM is the width, `d`, of the strip `D_{d}`.
 Let `S` denote the set of complex singularities of the functions `qtilde(x)` and `ρtilde(x)`:
-`S = { z ∈ C : qtilde(z) or ρtilde(z) does not exist a.}`
+`S = { z ∈ C : qtilde(z) or ρtilde(z) does not exist.}`
 let s denote the positive imaginary part of nearest singularity to the real axis:
 `s = min | Im{S} |`,
 then `d = min{ π/2max{γL,γR} , s }`.
