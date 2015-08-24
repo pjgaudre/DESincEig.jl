@@ -14,7 +14,7 @@ In the problem P1,
 ```
 In this algorithm, we use the transformation developed by Eggert et al. in reference <a href="http://dx.doi.org/10.1016/0021-9991(87)90163-X">[1]</a>.
 This transformation results in a symmetric generalized eigenvalue problem defined as:
-
+```julia
 P2 : (-D^2 + qtilde(x))v(x) = λ ρtilde(x) v(x),  -∞ < x < ∞,  with   v(±∞) = 0
 
 In the problem P2,
@@ -23,7 +23,8 @@ In the problem P2,
 3. ρtilde(x) is the resulting transformed function defined on (-∞,∞)
 4. v(x) are the eigenfunction corresponding to the eigenvalues λ.
    v(x) now have double expoenential decay at both infinities.
-See reference [2] for more details of the form of qtilde(x) and ρtilde(x)
+ ```
+See reference <a href="http://arxiv.org/abs/1409.7471v3">[2]</a> for more details of the form of qtilde(x) and ρtilde(x)
 
 The type `DomainSL` is used to select from the conformal maps depending on the domain of the problem and the decay rate of the solution of P1.
 
