@@ -68,32 +68,6 @@ Necessary parameters
 4. βopt:: Vector{T},     [βL,βR]
 5. γopt:: Vector{T},     [γL,γR]
 6. d:: Number,           min{ π/2max{γL,γR} , s }
-____________________________________________________________________________________________________________________
-Extra parameters ( not necessary but can offer more options )
-7. enum::Vector{T},         [n,tv]: Default is [NaN,NaN]
-                            n ∈ {0,1,2,3,...} :  Eigenvalue number
-                            tv = λ_{n} : True Value for eigenvalue λ_{n}
-                            If specified, the absolute error is computed instead of the absolute error approximation
-                            of the DESCM w.r.t. to λ_{n} will be returned.
-
-8. tol::T,                  tolerance level: Default is 5e-12
-                            tol is used to find the optimal Matrix Size in order for the approximate eigenvalue
-                            μ to have an an aprroximation to the absolute error less than tol.
-
-9. Range::Vector{Integer},  [start:skip:end]: Default = [1:1:100]
-                            Will run algorithm with N or M = "start" with index jump "skip" until "end".
-
-10. u0::T                   Parameter used in the inner map construction H(t) presented above.
-                            Default = one(T)
-
-11. u::Vector{T}            Parameters used in the inner map construction H(t) presented above.
-                            Default = [zero(T)]
-
-12. Trace_Mesh::Bool         Default = false
-If true, the mesh size will be computed by minimizing the trace of the matrix D^(-1)HD^(-1).
-resulting from the DESCM. For even functions q(x) and ρ(x) and an infinite domain: DomainSL = Infinite1SL or Infinite2SL,
-once can minimize this functional to obtain an alternate mesh size: htilde. This alternate mesh-size has proven
-to be better suited for highly-oscillatory functions q(x). This functional is minimized using the Julia package: Optim.
 ```
 
 
