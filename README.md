@@ -13,15 +13,7 @@ In the problem P1,
 4. u(x) are the eigenfunction corresponding to the eigenvalues λ.
 ```
 
-The type `DomainSL` is used to select from the conformal maps depending on the domain of the problem.
-Each element of type `DomainSL` is comprised of three functions:
-```julia
- 1. ψ  : The outer map
- 2. ψp : The derivative of ψ, (ψ prime)
- 3. ψtilde : The first half of the resulting transformation proposed by Eggert et al.
-            ψtilde =  - sqrt{ψp} D( 1/ψp D(\sqrt{ψp}) ),
-            where D is the differential operator.
-```
+The type `DomainSL` is used to select from the conformal maps depending on the domain of the problem and the decay rate of the solution of P1.
 1. For S-L problems on a finite domain `I=(a,b)` with algebraic decay at the endpoints:
 `DomainSL = FiniteSL`.
 2. For S-L problems on a infinite domain `I=(-∞,∞)` with algebraic decay at the endpoints:
