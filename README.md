@@ -12,14 +12,30 @@ In the problem P1,
 3. ρ(x) is a continuous positive function defined on (a,b)
 4. u(x) are the eigenfunction corresponding to the eigenvalues λ.
 ```
+In this algorithm, we use the transformation developed by Eggert et al. in reference <a href="http://dx.doi.org/10.1016/0021-9991(87)90163-X">[1]</a>.
+This transformation results in a symmetric generalized eigenvalue problem defined as:
+
+P2 : (-D^2 + qtilde(x))v(x) = λ ρtilde(x) v(x),  -∞ < x < ∞,  with   v(±∞) = 0
+
+In the problem P2,
+1. D is the differential operator, an
+2. qtilde(x) is the resulting transformed function defined on (-∞,∞)
+3. ρtilde(x) is the resulting transformed function defined on (-∞,∞)
+4. v(x) are the eigenfunction corresponding to the eigenvalues λ.
+   v(x) now have double expoenential decay at both infinities.
+See reference [2] for more details of the form of qtilde(x) and ρtilde(x)
 
 The type `DomainSL` is used to select from the conformal maps depending on the domain of the problem and the decay rate of the solution of P1.
+
 1. For S-L problems on a finite domain `I=(a,b)` with algebraic decay at the endpoints:
 `DomainSL = FiniteSL`.
+
 2. For S-L problems on a infinite domain `I=(-∞,∞)` with algebraic decay at the endpoints:
 `DomainSL = Infinite1SL`.
+
 3. For S-L problems on a infinite domain `I=(-∞,∞)` with single-exponential decay at the endpoints:
 `DomainSL = Infinite2SL`.
+
 4. For S-L problems on a semi-infinite domain `I=(0,∞)` with single-exponential decay at infinity and algebraic decay at 0:
 `DomainSL = SemiInfiniteSL`.
 
