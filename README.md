@@ -64,7 +64,7 @@ Input:
 Necessary parameters
 1. q(x):: Function,      The function in P1
 2. ρ(x):: Function,      The function in P1
-3. domain:: DomainSL,    FiniteSL, Infinite1SL, Infinite2SL or SemiInfiniteSL
+3. domain:: Domain,    Finite(a,b), Infinite1{Float64}(), Infinite2{Float64}() or SemiInfinite1{Float64}()
 4. βopt:: Vector{T},     [βL,βR]
 5. γopt:: Vector{T},     [γL,γR]
 6. d:: Number,           min{ π/2max{γL,γR} , s }
