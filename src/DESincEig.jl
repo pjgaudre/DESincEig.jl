@@ -85,13 +85,11 @@ Domain = SemiInfinite1{Float64}().
 =#
 
 export ψtilde
-
 ψtilde(d::Finite,t) = 0*t+1
-ψtilde(d::Infinite1,t) = 1/4.-3/4 .*sech(t).^2
+ψtilde(d::Infinite1,t) = 0.25.-0.75.*sech(t).^2
 ψtilde(d::Infinite2,t) = 0*t
-ψtilde(d::SemiInfinite1,t) = (1/8).* sech((1/2).*t).^2 .+ 1.0./(2.0.+2exp(t)).^2
-#TODO: add ψtilde for SemiInfinite2
-#ψtilde(d::SemiInfinite2,t) =
+ψtilde(d::SemiInfinite1,t) = 0.125.* sech(t/2).^2 .+ 0.25./(1.0.+exp(t)).^2
+ψtilde(d::SemiInfinite2,t) = 0*t + 0.25
 
 #=_____________________________________ DEFINITION OF INNER MAP________________________________________
 Inner map is given by a SincFun type ConformalMap.
