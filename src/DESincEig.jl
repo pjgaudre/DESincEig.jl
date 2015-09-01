@@ -267,4 +267,191 @@ function  Convergence_Analysis{T<:Number}(All_Eigenvalues::Matrix{T},tol::T,Matr
 end
 ######################################################################################################################################
 
+
+function SincEigenStop{T<:Number}(q::Function , ρ::Function , domain::Domain{T} , β::Vector{T} ,γ::Vector{T} ,dopt::T; enum::Vector{T}=[zero,NaN],tol::T = convert(T,5.0e-12),u0::T = one(T),u::Vector{T}=[zero(T)])
+# Functions used in Matrix construction.
+    H = [ConformalMap(u0,u)]
+    for i=1:3 push!(H,H[end]') end
+    ϕ(t) = ψ(domain,H[1][t])
+    ϕp2(t) = (ψp(domain,H[1][t]).*H[2][t]).^2
+    qtilde(t) = ψtilde(domain,H[1][t]).*H[2][t].^2 .+ (3/4).*(H[3][t]./H[2][t]).^2 .-(H[4][t]./2H[2][t]) .+ q(ϕ(t)).*ϕp2(t)
+    rhotilde(t) = ρ(ϕ(t)).*ϕp2(t)
+
+# Determining step sizes and left and right collocation points based on asymptotic information.
+if γ[1]>γ[2]
+
+    M = max( floor((enum[1]+1)/2) , 1 )
+    h = lambertW(pi*dopt*γ[1]*M/β[1])./(γ[1]*M)
+    N = max( ceil( (γ[1]/γ[2]).*M .+ log(β[1]/β[2])./ (γ[2].*h) ) , 0 )
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_old = E[enum[1]+1]
+
+    M += 1
+    h = lambertW(pi*dopt*γ[1]*M/β[1])./(γ[1]*M)
+    N = max( ceil( (γ[1]/γ[2]).*M .+ log(β[1]/β[2])./ (γ[2].*h) ) , 0 )
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_new = E[enum[1]+1]
+    Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
+
+    while Abs_Error_enum > tol && M < 200
+    Eigenvalue_enum_old = Eigenvalue_enum_new
+    M += 1
+    h = lambertW(pi*dopt*γ[1]*M/β[1])./(γ[1]*M)
+    N = max( ceil( (γ[1]/γ[2]).*M .+ log(β[1]/β[2])./ (γ[2].*h) ) , 0 )
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_new = E[enum[1]+1]
+    Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
+    end #while loop
+
+elseif γ[2]>γ[1]
+
+    N = max( floor((enum[1]+1)/2) , 1 )
+    h = lambertW(pi*dopt*γ[2]*N/β[2])./(γ[2]*N)
+    M = max( floor( (γ[2]/γ[1]).*N .+ log(β[2]/β[1])./ (γ[1].*h) ) , 0 )
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_old = E[enum[1]+1]
+
+    N += 1
+    h = lambertW(pi*dopt*γ[2]*N/β[2])./(γ[2]*N)
+    M = max( floor( (γ[2]/γ[1]).*N .+ log(β[2]/β[1])./ (γ[1].*h) ) , 0 )
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_new = E[enum[1]+1]
+    Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
+
+    while Abs_Error_enum > tol && N < 200
+    Eigenvalue_enum_old = Eigenvalue_enum_new
+    N += 1
+    h = lambertW(pi*dopt*γ[2]*N/β[2])./(γ[2]*N)
+    M = max( floor( (γ[2]/γ[1]).*N .+ log(β[2]/β[1])./ (γ[1].*h) ) , 0 )
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_old = E[enum[1]+1]
+    Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
+    end #while loop
+
+elseif γ[1] == γ[2] && β[1] > β[2]
+
+    M = max( floor((enum[1]+1)/2) , 1 )
+    h = lambertW(pi*dopt*γ[1]*M/β[1])./(γ[1]*M)
+    N = ceil( (γ[1]/γ[2]).*M .+ log(β[1]/β[2])./ (γ[2].*h) )
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_old = E[enum[1]+1]
+
+    M += 1
+    h = lambertW(pi*dopt*γ[1]*M/β[1])./(γ[1]*M)
+    N = ceil( (γ[1]/γ[2]).*M .+ log(β[1]/β[2])./ (γ[2].*h) )
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_new = E[enum[1]+1]
+    Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
+
+    while Abs_Error_enum > tol && M < 200
+    Eigenvalue_enum_old = Eigenvalue_enum_new
+    M += 1
+    h = lambertW(pi*dopt*γ[1]*M/β[1])./(γ[1]*M)
+    N = ceil( (γ[1]/γ[2]).*M .+ log(β[1]/β[2])./ (γ[2].*h) )
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_new = E[enum[1]+1]
+    Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
+    end #while loop
+
+elseif γ[1] == γ[2] && β[1] < β[2]
+
+    N = max( floor((enum[1]+1)/2) , 1 )
+    h = lambertW(pi*dopt*γ[2]*N/β[2])./(γ[2]*N)
+    M = floor( (γ[2]/γ[1]).*N .+ log(β[2]/β[1])./ (γ[1].*h) )
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_old = E[enum[1]+1]
+
+    N += 1
+    h = lambertW(pi*dopt*γ[2]*N/β[2])./(γ[2]*N)
+    M = floor( (γ[2]/γ[1]).*N .+ log(β[2]/β[1])./ (γ[1].*h) )
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_new = E[enum[1]+1]
+    Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
+
+    while Abs_Error_enum > tol && N < 200
+    Eigenvalue_enum_old = Eigenvalue_enum_new
+    N += 1
+    h = lambertW(pi*dopt*γ[2]*N/β[2])./(γ[2]*N)
+    M = floor( (γ[2]/γ[1]).*N .+ log(β[2]/β[1])./ (γ[1].*h) )
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_old = E[enum[1]+1]
+    Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
+    end #while loop
+
+elseif γ[1] == γ[2] && β[1] == β[2]
+
+    N = max( floor((enum[1]+1)/2) , 1 )
+    h = lambertW(pi*dopt*γ[2]*N/β[2])./(γ[2]*N)
+    k = [-N:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_old = E[enum[1]+1]
+
+    N += 1
+    h = lambertW(pi*dopt*γ[2]*N/β[2])./(γ[2]*N)
+    k = [-N:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_new = E[enum[1]+1]
+    Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
+
+    while Abs_Error_enum > tol && N < 200
+    Eigenvalue_enum_old = Eigenvalue_enum_new
+    N += 1
+    M = N
+    h = lambertW(pi*dopt*γ[2]*N/β[2])./(γ[2]*N)
+    k = [-M:N]
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
+    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    Eigenvalue_enum_new = E[enum[1]+1]
+    Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
+    end #while loop
+end #if loop
+
+    v = eigvecs(A,D2)[:,enum[1]+1]
+    return (enum[1],int(N+M+1),Eigenvalue_enum_new,Abs_Error_enum,v,h,k)
+
+end #function
+
+
+
 end #Module
