@@ -23,7 +23,7 @@ function lambertW(x::Real)
     expw0 = exp(w0)
     w1 = w0 - (w0*expw0 - x)/((w0 + 1)*expw0 -
         (w0 + 2) * (w0*expw0 - x)/(2w0 + 2))
-    while abs(w1/w0 - 1) > eps(typeof(x))
+    while abs(w1/w0 - 1) > 2eps(typeof(x))
         w0 = w1
         expw0 = exp(w0)
         w1 = w0 - (w0*expw0 - x)/((w0 + 1)*expw0 -
