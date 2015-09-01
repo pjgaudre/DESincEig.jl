@@ -49,7 +49,7 @@ References:
 
 using SincFun, Optim
 
-export SincEigen
+export SincEigen, SincEigenStop
 
 include("lambertW.jl")
 
