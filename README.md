@@ -1,10 +1,10 @@
-# DESincEig
+# DESincEig.jl
 
-The purpose of this `Julia` package is to provide an efficient fast general purpose differential eigenvalue solver package, supporting the canonical interval, and semi-infinite and infinite domains for Sturm-Liouville problems. The following algorithm utilizes the Double Exponential Sinc-Collocation method. This package allows the user to consider other domains by declaring a new instance of the type `DomainSL`.
+The purpose of this `Julia` package is to provide an efficient fast general purpose differential eigenvalue solver package, supporting the canonical interval, and semi-infinite and infinite domains for Sturm-Liouville problems. The following algorithm utilizes the Double Exponential Sinc-Collocation method. This package allows the user to consider other domains by declaring a new instance of the `SincFun` type `Domain`.
 
 The primary function of this module computes the eigenvalues of a general Sturm-Liouville problem of the form:
 ```julia
-P1 : (-D^2 + q(x) ) u(x) = λ ρ(x) u(x),  a < x < b,   with   u(a) = u(b) = 0, 
+P1 : (-D^2 + q(x) ) u(x) = λ ρ(x) u(x),  a < x < b,   with   u(a) = u(b) = 0,
       where -∞ ≦ a < b ≦ ∞  .
 In the problem P1,
 1. D is the differential operator, an
@@ -26,22 +26,22 @@ In the problem P2,
  ```
 See reference <a href="http://arxiv.org/abs/1409.7471v3">[2]</a> for more details of the form of `qtilde(x)` and `ρtilde(x)`.
 
-The type `DomainSL` is used to select from the conformal maps depending on the domain of the problem and the decay rate of the solution of P1.
+The type `Domain` is used to select from the conformal maps depending on the domain of the problem and the decay rate of the solution of P1.
 1. For S-L problems on a finite domain `I=(a,b)` with algebraic decay at the endpoints:
-`DomainSL = FiniteSL`. 
+`Domain = Finite(a,b)`.
 
 2. For S-L problems on a infinite domain `I=(-∞,∞)` with algebraic decay at the endpoints:
-`DomainSL = Infinite1SL`. 
+`Domain = Infinite1{Float64}()`.
 
 3. For S-L problems on a infinite domain `I=(-∞,∞)` with single-exponential decay at the endpoints:
-`DomainSL = Infinite2SL`. 
+`Domain = Infinite2{Float64}()`.
 
 4. For S-L problems on a semi-infinite domain `I=(0,∞)` with single-exponential decay at infinity and algebraic decay at 0:
-`DomainSL = SemiInfiniteSL`.
+`Domain = SemiInfinite1{Float64}()`.
 
 To use this package, once simply writes:
 ```julia
-using DESincEig
+using SincFun, DESincEig
 ```
 
 The main function of this package is `SincEigen`. This function computes the eigenvalues of the the Sturm-Liouville (P1) using the double exponential Sinc-Collocation method.
@@ -78,7 +78,7 @@ Suppose we are interested in computing the eigenvalues of the Laguerre equation:
 ```
 we use the package function `SincEigen` to calculate the eigenvalues:
 ```julia
-SincEigen( x -> (35/4)/x.^2  .- 2 .+ x.^2 /16 , ones , SemiInfiniteSL , [1.5,0.03125] , [1.0,2.0] , pi/4 )
+SincEigen( x -> (35/4)./x.^2  .- 2 .+ x.^2 /16 , ones , SemiInfinite1{Float64}() , [1.5,0.03125] , [1.0,2.0] , pi/4 )
 ```
 
 ### Example 2 from <a href="http://dx.doi.org/10.1016/j.aop.2015.05.026">[5]</a>
@@ -88,11 +88,11 @@ Suppose we are interested in computing the energy eigenvalues ```E``` of Schröd
 ```
 for the quartic anharmonic oscillator potential:
 ```julia
-V(x) = x^2 + x^4,
+V(x) = x.^2 + x.^4
 ```
 we use the package function `SincEigen` to calculate the eigenvalues:
 ```julia
-SincEigen( x -> x.^2 + x.^4 , ones , Infinite2SL , [0.125,0.125] , [2.0,2.0] , pi/4 )
+SincEigen(V, ones, Infinite2{Float64}(), [0.125,0.125] , [2.0,2.0] , pi/4 )
 ```
 
 # References:

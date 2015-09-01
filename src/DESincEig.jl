@@ -5,7 +5,7 @@ Department of Mathematical & Statistical Sciences,
 University of Alberta, 2014.
 
 The primary function of this module (function SincEigen) computes the eigenvalues of
-Singular Sturm-Liouviles problems using the DESINC Method.
+Singular Sturm-Liouville problems using the DESINC Method.
 _________________________________________________________________________________
 A general S-L problem has the following form:
 
@@ -47,10 +47,11 @@ References:
               Advances in Computational Mathematics, 5(1):329-359, 1996
 =#
 
-include("Sinc.jl")
-using Optim
-export SincEigen, DomainSL , SincEigenStop , lambert_W
-export FiniteSL,Infinite1SL,Infinite2SL,SemiInfiniteSL
+using SincFun, Optim
+
+export SincEigen
+
+include("lambertW.jl")
 
 ####################### Conformal mappings based on different domains #####################################
 #=
@@ -65,8 +66,8 @@ In other words, the conformal mappings have the form:
 
 ϕ(t) = (ψ∘H)(t) = ψ(H(t)),
 _____________________________________ DEFINITION OF OUTER MAPS________________________________________
-The type DomainSL is used to select from the outer maps depending on the domain of the problem.
-Each element of type DomainSL is comprised of three functions:
+The SincFun type Domain is used to select from the outer maps depending on the domain of the problem.
+Concrete Domains have methods:
  1. ψ  : The outer map
  2. ψp : The derivative of ψ, (ψ prime)
  3. ψtilde : The first half of the resulting transformation proposed by Eggert et al.
@@ -74,71 +75,29 @@ Each element of type DomainSL is comprised of three functions:
             where D is the differential operator w.r.t the varibale t.
 
 1. For S-L problems on a finite domain I=(a,b) with algebraic decay at the endpoints:
-DomainSL = FiniteSL.
+Domain = Finite(a,b).
 2. For S-L problems on a infinite domain I=(-∞,∞) with algebraic decay at the endpoints:
-DomainSL = Infinite1SL.
+Domain = Infinite1{Float64}().
 3. For S-L problems on a infinite domain I=(-∞,∞) with single-exponential decay at the endpoints:
-DomainSL = Infinite2SL.
+Domain = Infinite2{Float64}().
 4. For S-L problems on a semi-infinite domain I=(0,∞) with single-exponential decay at infinity and algebraic decay at 0:
-DomainSL = SemiInfiniteSL.
+Domain = SemiInfinite1{Float64}().
 =#
 
-type DomainSL
-        ψ::Function
-        ψp::Function
-        ψtilde::Function
-end
-FiniteSL(a::Number,b::Number) = DomainSL(t->(b-a)/(1.0+exp(-2t)).+ a , t->(b-a).*sech(t).^2 ./2, ones)
-Infinite1SL = DomainSL(sinh, cosh, t->1/4.-3/4 .*sech(t).^2)
-Infinite2SL = DomainSL(identity, ones, zeros)
-SemiInfiniteSL = DomainSL(t->log1p(exp(t)), t->1./(1+exp(-t)), t-> (1/8).* sech((1/2).*t).^2 .+ 1.0./(2.0.+2exp(t)).^2 )
+export ψtilde
+
+ψtilde(d::Finite,t) = 0*t+1
+ψtilde(d::Infinite1,t) = 1/4.-3/4 .*sech(t).^2
+ψtilde(d::Infinite2,t) = 0*t
+ψtilde(d::SemiInfinite1,t) = (1/8).* sech((1/2).*t).^2 .+ 1.0./(2.0.+2exp(t)).^2
+#TODO: add ψtilde for SemiInfinite2
+#ψtilde(d::SemiInfinite2,t) =
 
 #=_____________________________________ DEFINITION OF INNER MAP________________________________________
-Inner map is given by:
-H(t) = u[0]sinh(t) + u[1] + u[2]t + u[3] t^2 + ... + u[n]t^(n-1).
+Inner map is given by a SincFun type ConformalMap.
+It stores the data for h(t) = u₀sinh(t) + u₁ + u₂t + u₃ t^2 + ⋯ + uₙt^(n-1).
 For more information on the form of the inner map, please see reference [3].
-The functions Hp(t), Hpp(t) and Hppp(t) correspond to the first, second and third derivative of H(t) respectively.
-Input: t    :: Number{T} or Vector{T}
-       u[0] :: Number{T}
-       u    :: Vector{T}  ( u = [ u[1],u[2],...,u[n] ] )
-Ouput: H(t), Hp(t), Hpp(t), or Hppp(t)
 =#
-function H{T<:Number}(t::T,u0::T,u::Vector{T})
-nu = length(u)
-u0*sinh(t) + dot(u,t.^[0:nu-1])
-end
-function H{T<:Number}(t::Vector{T},u0::T,u::Vector{T})
-nu = length(u)
-u0*sinh(t) .+ t.^([0:nu-1]')*u
-end
-##################
-function Hp{T<:Number}(t::T,u0::T,u::Vector{T})
-nu = length(u)
-u0*cosh(t) + dot(u[2:nu],[1:nu-1].*t.^[0:nu-2])
-end
-function Hp{T<:Number}(t::Vector{T},u0::T,u::Vector{T})
-nu = length(u)
-u0*cosh(t) .+ t.^([0:nu-2]')*([1:nu-1].*u[2:nu])
-end
-##################
-function Hpp{T<:Number}(t::T,u0::T,u::Vector{T})
-nu = length(u)
-u0*sinh(t) + dot(u[3:nu],[2:nu-1].*[1:nu-2].*t.^[0:nu-3])
-end
-function Hpp{T<:Number}(t::Vector{T},u0::T,u::Vector{T})
-nu = length(u)
-u0*sinh(t) .+ t.^([0:nu-3]')*([2:nu-1].*[1:nu-2].*u[3:nu])
-end
-##################
-function Hppp{T<:Number}(t::T,u0::T,u::Vector{T})
-nu = length(u)
-u0*cosh(t) + dot(u[4:nu],[3:nu-1].*[2:nu-2].*[1:nu-3].*t.^[0:nu-4])
-end
-function Hppp{T<:Number}(t::Vector{T},u0::T,u::Vector{T})
-nu = length(u)
-u0*cosh(t) .+ t.^([0:nu-4]')*([3:nu-1].*[2:nu-2].*[1:nu-3].*u[4:nu])
-end
-##################################################################################################################
 
 ################################### The Main function: SincEigen ####################################################
 #=
@@ -160,7 +119,7 @@ Input:
 Necessary parameters
 1. q(x):: Function,      The function in P1
 2. ρ(x):: Function,      The function in P1
-3. domain:: DomainSL,    FiniteSL, Infinite1SL, Infinite2SL or SemiInfiniteSL
+3. domain:: Domain,      Finite, Infinite1, Infinite2 or SemiInfinite1
 4. βopt:: Vector{T},     [βL,βR]
 5. γopt:: Vector{T},     [γL,γR]
 6. d:: Number,           min{ π/2max{γL,γR} , s }
@@ -187,71 +146,73 @@ Extra parameters ( not necessary but can offer more options )
 
 12. Trace_Mesh::Bool         Default = false
 If true, the mesh size will be computed by minimizing the trace of the matrix D^(-1)HD^(-1).
-resulting from the DESCM. For even functions q(x) and ρ(x) and an infinite domain: DomainSL = Infinite1SL or Infinite2SL,
+resulting from the DESCM. For even functions q(x) and ρ(x) and an infinite domain: Domain = Infinite1 or Infinite2,
 once can minimize this functional to obtain an alternate mesh size: htilde. This alternate mesh-size has proven
 to be better suited for highly-oscillatory functions q(x). This functional is minimized using the Julia package: Optim.
 _______________________________________________________________________________________________________________________
 =#
-function SincEigen{T<:Number}(q::Function,ρ::Function,domain::DomainSL,β::Vector{T},γ::Vector{T},dopt::T;enum::Vector{T}=[NaN,NaN], tol::T=5e-12, Range::Vector{Int64}=[1:1:100], u0::T=one(T), u::Vector{T}=[zero(T)], Trace_Mesh::Bool=false)
-# Functions used in Matrix construction.
-ϕ(t) = domain.ψ(H(t,u0,u))
-ϕp2(t) = (domain.ψp(H(t,u0,u)).*Hp(t,u0,u)).^2
-qtilde(t) = domain.ψtilde(H(t,u0,u)).*Hp(t,u0,u).^2 .+ (3/4).*(Hpp(t,u0,u)./Hp(t,u0,u)).^2 .-(Hppp(t,u0,u)./2Hp(t,u0,u)) .+ q(ϕ(t)).*ϕp2(t)
-rhotilde(t) = ρ(ϕ(t)).*ϕp2(t)
-# Determining step sizes and left and right collocation points based on asymptotic information.
-if γ[1]>γ[2]
+function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vector{T},γ::Vector{T},dopt::T;enum::Vector{T}=[NaN,NaN], tol::T=5e-12, Range::Vector{Int64}=[1:1:100], u0::T=one(T), u::Vector{T}=[zero(T)], Trace_Mesh::Bool=false)
+    # Functions used in Matrix construction.
+    H = [ConformalMap(u0,u)]
+    for i=1:3 push!(H,H[end]') end
+    ϕ(t) = ψ(domain,H[1][t])
+    ϕp2(t) = (ψp(domain,H[1][t]).*H[2][t]).^2
+    qtilde(t) = ψtilde(domain,H[1][t]).*H[2][t].^2 .+ (3/4).*(H[3][t]./H[2][t]).^2 .-(H[4][t]./2H[2][t]) .+ q(ϕ(t)).*ϕp2(t)
+    rhotilde(t) = ρ(ϕ(t)).*ϕp2(t)
+    # Determining step sizes and left and right collocation points based on asymptotic information.
+    if γ[1]>γ[2]
         n = M = Range
         gam = γ[1]
         beta = β[1]
-        hoptimal = lambert_W(pi*dopt*gam*n/beta)./(gam*n)
+        hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
         N = max( ceil( (γ[1]/γ[2]).*n .+ log(β[1]/β[2])./ (γ[2].*hoptimal) ) , 0 )
-elseif γ[2]>γ[1]
+    elseif γ[2]>γ[1]
         n = N = Range
         gam = γ[2]
         beta = β[2]
-        hoptimal = lambert_W(pi*dopt*gam*n/beta)./(gam*n)
+        hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
         M = max( floor( (γ[2]/γ[1]).*n .+ log(β[2]/β[1])./ (γ[1].*hoptimal) ) , 0 )
-elseif γ[1] == γ[2] && β[1] > β[2]
+    elseif γ[1] == γ[2] && β[1] > β[2]
         n = M = Range
         gam = γ[1]
         beta = β[1]
-        hoptimal = lambert_W(pi*dopt*gam*n/beta)./(gam*n)
+        hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
         N = ceil( n .+ log(β[1]/β[2])./ (γ[2].*hoptimal) )
-elseif γ[1] == γ[2] && β[1] < β[2]
+    elseif γ[1] == γ[2] && β[1] < β[2]
         n = N = Range
         gam = γ[2]
         beta = β[2]
-        hoptimal = lambert_W(pi*dopt*gam*n/beta)./(gam*n)
+        hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
         M = floor(n .+ log(β[2]/β[1])./ (γ[1].*hoptimal) )
-elseif γ[1] == γ[2] && β[1] == β[2]
+    elseif γ[1] == γ[2] && β[1] == β[2]
         n = N = Range
         M = 1.0*N
         gam = γ[2]
         beta = β[2]
         if Trace_Mesh == true
-        diag_sinc_matrix(t) = (domain.ψtilde(H(t,u0,u) .+ (3/4).*(Hpp(t,u0,u)./Hp(t,u0,u).^2).^2 .-(Hppp(t,u0,u)./2Hp(t,u0,u).^3))./domain.ψp(H(t,u0,u)).^2 .+ q(ϕ(t)))./ρ(ϕ(t))
-        hoptimal = [optimize(h->sum( diag_sinc_matrix([-N[i]:N[i]]*h).+ (pi^2/(3h^2))./ rhotilde([-N[i]:N[i]]*h) ),0.001,(3.0*u0+log(pi*dopt*gam*i/beta))./(gam*i)).minimum for i in [1:length(n)]]
+            diag_sinc_matrix(t) = (ψtilde(domain,H[1][t] .+ (3/4).*(H[3][t]./H[2][t].^2).^2 .-(H[4][t]./2H[2][t].^3))./ψp(domain,H[1][t]).^2 .+ q(ϕ(t)))./ρ(ϕ(t))
+            hoptimal = [optimize(h->sum( diag_sinc_matrix([-N[i]:N[i]]*h).+ (pi^2/(3h^2))./ rhotilde([-N[i]:N[i]]*h) ),0.001,(3.0*u0+log(pi*dopt*gam*i/beta))./(gam*i)).minimum for i in [1:length(n)]]
         elseif Trace_Mesh == false
-        hoptimal = lambert_W(pi*dopt*gam*n/beta)./(gam*n)
+            hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
         end #if loop
-end # if loop
+    end # if loop
 
-#  INITIAL CONDITIONS
-Length = length(Range)                                # Length of the vectors in the following algorithm given the previous conditions
-Eigenvalue_enum = zeros(Length)                       # Vector used for storing approximations to eigenvalue enum at every iteration.
-MatrixSizes = N.+M.+1                                 # Array of all square matrix sizes for every iteration.
-All_Eigenvalues = zeros(int(MatrixSizes[end]),Length) # Matrix used for storing all obtained eigenvalues as columns at every iteration.
-for i = 1:Length
-h = hoptimal[i]                                     # Mesh size used at every iteration.
-k = [-M[i]:N[i]]                                    # Vector of Mesh points.
-A = Symmetric(diagm(qtilde(k*h))-Sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
-D2 = Symmetric(diagm(rhotilde(k*h)))                  # Construct Diagonal pos. def. matrix D^2
-E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
-All_Eigenvalues[1:length(E),i] = E                  # Storing all eigenvalues in columns in matrix All_Eigenvalues.
-end
-## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
-(RESULTS,All_Abs_Error_Approx) = Convergence_Analysis(All_Eigenvalues,tol,MatrixSizes,enum)
-(RESULTS, All_Abs_Error_Approx , hoptimal , n, MatrixSizes)
+    #  INITIAL CONDITIONS
+    Length = length(Range)                                # Length of the vectors in the following algorithm given the previous conditions
+    Eigenvalue_enum = zeros(Length)                       # Vector used for storing approximations to eigenvalue enum at every iteration.
+    MatrixSizes = N.+M.+1                                 # Array of all square matrix sizes for every iteration.
+    All_Eigenvalues = zeros(int(MatrixSizes[end]),Length) # Matrix used for storing all obtained eigenvalues as columns at every iteration.
+    for i = 1:Length
+        h = hoptimal[i]                                     # Mesh size used at every iteration.
+        k = [-M[i]:N[i]]                                    # Vector of Mesh points.
+        A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
+        D2 = Symmetric(diagm(rhotilde(k*h)))                  # Construct Diagonal pos. def. matrix D^2
+        E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+        All_Eigenvalues[1:length(E),i] = E                  # Storing all eigenvalues in columns in matrix All_Eigenvalues.
+    end
+    ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
+    (RESULTS,All_Abs_Error_Approx) = Convergence_Analysis(All_Eigenvalues,tol,MatrixSizes,enum)
+    (RESULTS, All_Abs_Error_Approx , hoptimal , n, MatrixSizes)
 end
 ######################################################################################################################################
 
@@ -278,59 +239,34 @@ Row i, Column j = approximations to the absolute error for eigenvalue number "n=
 =#
 
 function  Convergence_Analysis{T<:Number}(All_Eigenvalues::Matrix{T},tol::T,MatrixSizes::Vector{T},enum::Vector{T})
-# Calculating an Approximation to the Absolute Error for all Energy values
-if isnan(enum[1]) || isnan(enum[2]) == true
-All_Abs_Error_Approx  = abs(All_Eigenvalues[:,2:end].-All_Eigenvalues[:,1:end-1])
-else
-All_Abs_Error_Approx = zeros(All_Eigenvalues[:,2:end])
-All_Abs_Error_Approx[[1:int(enum[1]),(int(enum[1])+2):end],:] =  abs(All_Eigenvalues[[1:int(enum[1]),(int(enum[1])+2):end],2:end].-All_Eigenvalues[[1:int(enum[1]),(int(enum[1])+2):end],1:end-1])
-All_Abs_Error_Approx[int(enum[1])+1,:] =  abs(All_Eigenvalues[int(enum[1])+1,2:end] .- enum[2])
-end # if loop
+    # Calculating an Approximation to the Absolute Error for all Energy values
+    if isnan(enum[1]) || isnan(enum[2]) == true
+        All_Abs_Error_Approx  = abs(All_Eigenvalues[:,2:end].-All_Eigenvalues[:,1:end-1])
+    else
+        All_Abs_Error_Approx = zeros(All_Eigenvalues[:,2:end])
+        All_Abs_Error_Approx[[1:int(enum[1]),(int(enum[1])+2):end],:] =  abs(All_Eigenvalues[[1:int(enum[1]),(int(enum[1])+2):end],2:end].-All_Eigenvalues[[1:int(enum[1]),(int(enum[1])+2):end],1:end-1])
+        All_Abs_Error_Approx[int(enum[1])+1,:] =  abs(All_Eigenvalues[int(enum[1])+1,2:end] .- enum[2])
+    end # if loop
 
-#Finding which Eigenvalues satisfy the condition Absolute Error Approxmiation < tol
-m = size(All_Abs_Error_Approx)[1]
-First_Non_Zero = [findfirst(All_Abs_Error_Approx[i,:]) for i in [1:m]]
-Less_than_tol_matrix =  All_Abs_Error_Approx .< tol
-Eig_less_than_tol_posi = [findnext(Less_than_tol_matrix[i,:], true, First_Non_Zero[i]) for i in [1:m]]
-# list of eigenvalues  that satisfy the condition Relative Error Approxmiation<tol
-Posi_index = findn(Eig_less_than_tol_posi)[1]
-# number of eigenvalues that satisfy the condition Error<tol
-num_eig_less_than_tol = length(Posi_index)
-# Find the optimal value of N for the eignvalues from the list Posi_index
-idx = [Eig_less_than_tol_posi[Posi_index[j]]+1 for j in [1:num_eig_less_than_tol]]
-# Find the value of the eigenvalues and Relative Error Approximation for the eignvalues from the list Posi_index
-Error = [All_Abs_Error_Approx[Posi_index[i],idx[i]-1] for i in [1:num_eig_less_than_tol]]
-Eigenvalues = [All_Eigenvalues[Posi_index[i],idx[i]] for i in [1:num_eig_less_than_tol]]
-# Display wanted results
-Eig_number = Posi_index.-1
-MatrixSizeOpt = MatrixSizes[idx]
-([Eig_number MatrixSizeOpt Eigenvalues Error], All_Abs_Error_Approx)
+    #Finding which Eigenvalues satisfy the condition Absolute Error Approxmiation < tol
+    m = size(All_Abs_Error_Approx)[1]
+    First_Non_Zero = [findfirst(All_Abs_Error_Approx[i,:]) for i in [1:m]]
+    Less_than_tol_matrix =  All_Abs_Error_Approx .< tol
+    Eig_less_than_tol_posi = [findnext(Less_than_tol_matrix[i,:], true, First_Non_Zero[i]) for i in [1:m]]
+    # list of eigenvalues  that satisfy the condition Relative Error Approxmiation<tol
+    Posi_index = findn(Eig_less_than_tol_posi)[1]
+    # number of eigenvalues that satisfy the condition Error<tol
+    num_eig_less_than_tol = length(Posi_index)
+    # Find the optimal value of N for the eignvalues from the list Posi_index
+    idx = [Eig_less_than_tol_posi[Posi_index[j]]+1 for j in [1:num_eig_less_than_tol]]
+    # Find the value of the eigenvalues and Relative Error Approximation for the eignvalues from the list Posi_index
+    Error = [All_Abs_Error_Approx[Posi_index[i],idx[i]-1] for i in [1:num_eig_less_than_tol]]
+    Eigenvalues = [All_Eigenvalues[Posi_index[i],idx[i]] for i in [1:num_eig_less_than_tol]]
+    # Display wanted results
+    Eig_number = Posi_index.-1
+    MatrixSizeOpt = MatrixSizes[idx]
+    ([Eig_number MatrixSizeOpt Eigenvalues Error], All_Abs_Error_Approx)
 end
 ######################################################################################################################################
-
-################################### The Lambert-W function (See reference [4]) ###################################
-#=
-The following algorithm computes the Lambert-W function to 15 correct digits using Halley's method for any x
-in the domain I=( -1/exp(1), ∞ ). This function can also compute the lambert-W function component-wise for
-vectors or matrices. The Lambert-W function is used in the module DESincEig to compute the mesh size h.
-Input: x:: Number, Vector or Matrix
-Output: Lambert_W(x)
-=#
-function lambert_W{T<:Number}(x::T)
-    if x < -1/exp(1); return NaN; end
-    w0 = 1.0
-    w1 = w0 - (w0 * exp(w0) - x)/((w0 + 1) * exp(w0) -
-        (w0 + 2) * (w0 * exp(w0) - x)/(2 * w0 + 2))
-    n = 1
-    while abs(w1 - w0) > 1e-15 && n <= 20
-        w0 = w1
-        w1 = w0 - (w0 * exp(w0) - x)/((w0 + 1) * exp(w0) -
-            (w0 + 2) * (w0 * exp(w0) - x)/(2 * w0 + 2))
-        n += 1
-    end
-    return w1
-end
-@vectorize_1arg Number lambert_W
-##################################################################################################################
 
 end #Module
