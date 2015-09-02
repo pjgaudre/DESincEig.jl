@@ -88,7 +88,7 @@ export ψtilde
 ψtilde(d::Finite,t) = 0*t+1
 ψtilde(d::Infinite1,t) = 0.25.-0.75.*sech(t).^2
 ψtilde(d::Infinite2,t) = 0*t
-ψtilde(d::SemiInfinite1,t) = 0.125.* sech(t/2).^2 .+ 0.25./(1.0.+exp(t)).^2
+ψtilde(d::SemiInfinite1,t) = (2*exp(t).+1)./(2.+2.*exp(t)).^2
 ψtilde(d::SemiInfinite2,t) = 0*t + 0.25
 
 #=_____________________________________ DEFINITION OF INNER MAP________________________________________
