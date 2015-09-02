@@ -293,7 +293,7 @@ function SincEigenStop{T<:Number}(q::Function , ρ::Function , domain::Domain{T}
     Eigenvalue_enum_new = E[enum[1]+1]
     Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])    
 
-    while Abs_Error_enum > tol && M < 200
+    while Abs_Error_enum > tol && n < 200
     Eigenvalue_enum_old = Eigenvalue_enum_new
     n += 1
     h,k = h_and_k(n,β,γ,dopt)
