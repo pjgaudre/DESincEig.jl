@@ -149,7 +149,7 @@ once can minimize this functional to obtain an alternate mesh size: htilde. This
 to be better suited for highly-oscillatory functions q(x). This functional is minimized using the Julia package: Optim.
 _______________________________________________________________________________________________________________________
 =#
-function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vector{T},γ::Vector{T},dopt::T;enum::Vector{T}=[NaN,NaN], tol::T=5e-12, Range::Vector{Int64}=[1:1:100], u0::T=one(T), u::Vector{T}=[zero(T)], Trace_Mesh::Bool=false)
+function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vector{T},γ::Vector{T},dopt::T;enum::Vector{T}=[NaN;NaN], tol::T=5e-12, Range::Vector{Int64}=collect(1:1:100), u0::T=one(T), u::Vector{T}=[zero(T)], Trace_Mesh::Bool=false)
     # Functions used in Matrix construction.
     H = [ConformalMap(u0,u)]
     for i=1:3 push!(H,H[end]') end
@@ -189,7 +189,7 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
         beta = β[2]
         if Trace_Mesh == true
             diag_sinc_matrix(t) = (ψtilde(domain,H[1][t] .+ (3/4).*(H[3][t]./H[2][t].^2).^2 .-(H[4][t]./2H[2][t].^3))./ψp(domain,H[1][t]).^2 .+ q(ϕ(t)))./ρ(ϕ(t))
-            hoptimal = [optimize(h->sum( diag_sinc_matrix([-N[i]:N[i]]*h).+ (pi^2/(3h^2))./ rhotilde([-N[i]:N[i]]*h) ),0.001,(3.0*u0+log(pi*dopt*gam*i/beta))./(gam*i)).minimum for i in [1:length(n)]]
+            hoptimal = [optimize(h->sum( diag_sinc_matrix(collect(-N[i]:N[i])*h).+ (pi^2/(3h^2))./ rhotilde(collect(-N[i]:N[i])*h) ),0.001,(3.0*u0+log(pi*dopt*gam*i/beta))./(gam*i)).minimum for i in 1:length(n)]
         elseif Trace_Mesh == false
             hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
         end #if loop
@@ -199,18 +199,18 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
     Length = length(Range)                                # Length of the vectors in the following algorithm given the previous conditions
     Eigenvalue_enum = zeros(Length)                       # Vector used for storing approximations to eigenvalue enum at every iteration.
     MatrixSizes = N.+M.+1                                 # Array of all square matrix sizes for every iteration.
-    All_Eigenvalues = zeros(int(MatrixSizes[end]),Length) # Matrix used for storing all obtained eigenvalues as columns at every iteration.
+    All_Eigenvalues = zeros(round(Int,MatrixSizes[end]),Length) # Matrix used for storing all obtained eigenvalues as columns at every iteration.
     for i = 1:Length
         h = hoptimal[i]                                     # Mesh size used at every iteration.
-        k = [-M[i]:N[i]]                                    # Vector of Mesh points.
+        k = collect(-M[i]:N[i])                                    # Vector of Mesh points.
         A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
         D2 = Symmetric(diagm(rhotilde(k*h)))                  # Construct Diagonal pos. def. matrix D^2
         E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
         All_Eigenvalues[1:length(E),i] = E                  # Storing all eigenvalues in columns in matrix All_Eigenvalues.
     end
     ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
-    (RESULTS,All_Abs_Error_Approx) = Convergence_Analysis(All_Eigenvalues,tol,MatrixSizes,enum)
-    (RESULTS, All_Abs_Error_Approx , hoptimal , n, MatrixSizes)
+    (RESULTS, All_Abs_Error_Approx) = Convergence_Analysis(All_Eigenvalues,tol,MatrixSizes,enum)
+    (RESULTS, All_Abs_Error_Approx, hoptimal, n, MatrixSizes)
 end
 ######################################################################################################################################
 
@@ -248,18 +248,18 @@ function  Convergence_Analysis{T<:Number}(All_Eigenvalues::Matrix{T},tol::T,Matr
 
     #Finding which Eigenvalues satisfy the condition Absolute Error Approxmiation < tol
     m = size(All_Abs_Error_Approx)[1]
-    First_Non_Zero = [findfirst(All_Abs_Error_Approx[i,:]) for i in [1:m]]
+    First_Non_Zero = [findfirst(All_Abs_Error_Approx[i,:]) for i in collect(1:m)]
     Less_than_tol_matrix =  All_Abs_Error_Approx .< tol
-    Eig_less_than_tol_posi = [findnext(Less_than_tol_matrix[i,:], true, First_Non_Zero[i]) for i in [1:m]]
+    Eig_less_than_tol_posi = [findnext(Less_than_tol_matrix[i,:], true, First_Non_Zero[i]) for i in collect(1:m)]
     # list of eigenvalues  that satisfy the condition Relative Error Approxmiation<tol
-    Posi_index = findn(Eig_less_than_tol_posi)[1]
+    Posi_index = findn(Eig_less_than_tol_posi)#[1]
     # number of eigenvalues that satisfy the condition Error<tol
     num_eig_less_than_tol = length(Posi_index)
     # Find the optimal value of N for the eignvalues from the list Posi_index
-    idx = [Eig_less_than_tol_posi[Posi_index[j]]+1 for j in [1:num_eig_less_than_tol]]
+    idx = [Eig_less_than_tol_posi[Posi_index[j]]+1 for j in 1:num_eig_less_than_tol]
     # Find the value of the eigenvalues and Relative Error Approximation for the eignvalues from the list Posi_index
-    Error = [All_Abs_Error_Approx[Posi_index[i],idx[i]-1] for i in [1:num_eig_less_than_tol]]
-    Eigenvalues = [All_Eigenvalues[Posi_index[i],idx[i]] for i in [1:num_eig_less_than_tol]]
+    Error = [All_Abs_Error_Approx[Posi_index[i],idx[i]-1] for i in 1:num_eig_less_than_tol]
+    Eigenvalues = [All_Eigenvalues[Posi_index[i],idx[i]] for i in 1:num_eig_less_than_tol]
     # Display wanted results
     Eig_number = Posi_index.-1
     MatrixSizeOpt = MatrixSizes[idx]
@@ -268,30 +268,30 @@ end
 ######################################################################################################################################
 
 
-function SincEigenStop{T<:Number}(q::Function , ρ::Function , domain::Domain{T} , β::Vector{T} ,γ::Vector{T} ,dopt::T; enum::Vector{T}=[zero,NaN],tol::T = convert(T,5.0e-12),u0::T = one(T),u::Vector{T}=[zero(T)])
+function SincEigenStop{T<:Number}(q::Function , ρ::Function , domain::Domain{T} , β::Vector{T} ,γ::Vector{T} ,dopt::T; enum::Vector{T}=[zero;NaN],tol::T = convert(T,5.0e-12),u0::T = one(T),u::Vector{T}=[zero(T)])
 # Functions used in Matrix construction.
     H = [ConformalMap(u0,u)]
     for i=1:3 push!(H,H[end]') end
     ϕ(t) = ψ(domain,H[1][t])
     ϕp2(t) = (ψp(domain,H[1][t]).*H[2][t]).^2
     qtilde(t) = ψtilde(domain,H[1][t]).*H[2][t].^2 .+ (3/4).*(H[3][t]./H[2][t]).^2 .-(H[4][t]./2H[2][t]) .+ q(ϕ(t)).*ϕp2(t)
-    rhotilde(t) = ρ(ϕ(t)).*ϕp2(t)   
+    rhotilde(t) = ρ(ϕ(t)).*ϕp2(t)
 # Determining step sizes and left and right collocation points based on asymptotic information.
     n = max( floor((enum[1]+1)/2) , 1 )
     h,k = h_and_k(n,β,γ,dopt)
-    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) 
-    D2 = Symmetric(diagm(rhotilde(k*h)))                
-    E = eigvals(A,D2)                                   
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2)
+    D2 = Symmetric(diagm(rhotilde(k*h)))
+    E = eigvals(A,D2)
     Eigenvalue_enum_old = E[enum[1]+1]
-    
+
     n += 1
-    
+
     h,k = h_and_k(n,β,γ,dopt)
     A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
     D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
     E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
     Eigenvalue_enum_new = E[enum[1]+1]
-    Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])    
+    Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
 
     while Abs_Error_enum > tol && n < 200
     Eigenvalue_enum_old = Eigenvalue_enum_new
@@ -303,7 +303,7 @@ function SincEigenStop{T<:Number}(q::Function , ρ::Function , domain::Domain{T}
     Eigenvalue_enum_new = E[enum[1]+1]
     Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
     end #while loop
- 
+
     v = eigvecs(A,D2)[:,enum[1]+1]
     return (enum[1],int(length(k)),Eigenvalue_enum_new,Abs_Error_enum,v,h,k)
 
@@ -314,22 +314,22 @@ function h_and_k{T<:Number}(n::T, β::Vector{T} ,γ::Vector{T} ,dopt::T)
 if γ[1]>γ[2]
     h = lambertW(pi*dopt*γ[1]*n/β[1])./(γ[1]*n)
     N = max( ceil( (γ[1]/γ[2]).*n .+ log(β[1]/β[2])./ (γ[2].*h) ) , 0 )
-    return h,[-n,N]    
+    return h,[-n;N]
 elseif γ[2]>γ[1]
     h = lambertW(pi*dopt*γ[2]*n/β[2])./(γ[2]*n)
     M = max( floor( (γ[2]/γ[1]).*n .+ log(β[2]/β[1])./ (γ[1].*h) ) , 0 )
-    return h, [-M,n] 
+    return h, [-M;n]
 elseif γ[1] == γ[2] && β[1] > β[2]
     h = lambertW(pi*dopt*γ[1]*n/β[1])./(γ[1]*n)
-    N = ceil( (γ[1]/γ[2]).*n .+ log(β[1]/β[2])./ (γ[2].*h) )  
-    return h, [-n,N] 
+    N = ceil( (γ[1]/γ[2]).*n .+ log(β[1]/β[2])./ (γ[2].*h) )
+    return h, [-n;N]
 elseif γ[1] == γ[2] && β[1] < β[2]
-    h = lambertW(pi*dopt*γ[2]*n/β[2])./(γ[2]*n) 
-    M = floor( (γ[2]/γ[1]).*n .+ log(β[2]/β[1])./ (γ[1].*h) )  
-    return h , [-M,n] 
+    h = lambertW(pi*dopt*γ[2]*n/β[2])./(γ[2]*n)
+    M = floor( (γ[2]/γ[1]).*n .+ log(β[2]/β[1])./ (γ[1].*h) )
+    return h , [-M;n]
 elseif γ[1] == γ[2] && β[1] == β[2]
-    h = lambertW(pi*dopt*γ[2]*n/β[2])./(γ[2]*n) 
-    return h , [-n,n]    
+    h = lambertW(pi*dopt*γ[2]*n/β[2])./(γ[2]*n)
+    return h , [-n;n]
 end  # if loop
 end
 
