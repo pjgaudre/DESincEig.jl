@@ -30,7 +30,7 @@ ga = 4.0
 B = (1/2)^ga / ga
 for i=1:size(c)[2]
     (RESULTS, All_Abs_Error_Approx , hoptimal , n, MatrixSizes) = SincEigen( x->Vsextic(x,c[i,:]) , ones ,Infinite2{Float64}(), [B;B] , [ga,ga] , pi/2ga ) 
-    @test norm(RESULTS[enum+1,3] - exact_values[i]) < 1e-8
+    @test norm(RESULTS[enum[i]+1,3] - exact_values[i]) < 1e-8
 end
 
 
