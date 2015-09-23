@@ -314,25 +314,23 @@ function h_and_k{T<:Number}(n::T, β::Vector{T} ,γ::Vector{T} ,dopt::T)
 if γ[1]>γ[2]
     h = lambertW(pi*dopt*γ[1]*n/β[1])./(γ[1]*n)
     N = max( ceil( (γ[1]/γ[2]).*n .+ log(β[1]/β[2])./ (γ[2].*h) ) , 0 )
-    return h,[-n;N]
+    return h,collect(-n:N)
 elseif γ[2]>γ[1]
     h = lambertW(pi*dopt*γ[2]*n/β[2])./(γ[2]*n)
     M = max( floor( (γ[2]/γ[1]).*n .+ log(β[2]/β[1])./ (γ[1].*h) ) , 0 )
-    return h, [-M;n]
+    return h, collect(-M:n)
 elseif γ[1] == γ[2] && β[1] > β[2]
     h = lambertW(pi*dopt*γ[1]*n/β[1])./(γ[1]*n)
     N = ceil( (γ[1]/γ[2]).*n .+ log(β[1]/β[2])./ (γ[2].*h) )
-    return h, [-n;N]
+    return h, collect(-n:N)
 elseif γ[1] == γ[2] && β[1] < β[2]
     h = lambertW(pi*dopt*γ[2]*n/β[2])./(γ[2]*n)
     M = floor( (γ[2]/γ[1]).*n .+ log(β[2]/β[1])./ (γ[1].*h) )
-    return h , [-M;n]
+    return h , collect(-M:n)
 elseif γ[1] == γ[2] && β[1] == β[2]
     h = lambertW(pi*dopt*γ[2]*n/β[2])./(γ[2]*n)
-    return h , [-n;n]
+    return h , collect(-n:n)
 end  # if loop
 end
-
-
 
 end #Module
