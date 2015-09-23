@@ -189,7 +189,7 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
         beta = β[2]
         if Trace_Mesh == true
             diag_sinc_matrix(t) = (ψtilde(domain,H[1][t] .+ (3/4).*(H[3][t]./H[2][t].^2).^2 .-(H[4][t]./2H[2][t].^3))./ψp(domain,H[1][t]).^2 .+ q(ϕ(t)))./ρ(ϕ(t))
-            hoptimal = [optimize(h->sum( diag_sinc_matrix(collect(-N[i]:N[i])*h).+ (pi^2/(3h^2))./ rhotilde(collect(-N[i]:N[i])*h) ),0.001,(3.0*u0+log(pi*dopt*gam*i/beta))./(gam*i)).minimum for i in 1:length(n)]
+            hoptimal = [optimize(h->sum( diag_sinc_matrix(collect(-N[i]:N[i])*h).+ (pi^2/(3h^2))./ rhotilde(collect(-N[i]:N[i])*h) ),0.001,(3.0*u0+log(pi*dopt*gam*i/beta))./(gam*i)).minimum for i in collect(1:length(n))]
         elseif Trace_Mesh == false
             hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
         end #if loop
@@ -242,9 +242,8 @@ function  Convergence_Analysis{T<:Number}(All_Eigenvalues::Matrix{T},tol::T,Matr
         All_Abs_Error_Approx  = abs(All_Eigenvalues[:,2:end].-All_Eigenvalues[:,1:end-1])
     else
         All_Abs_Error_Approx = zeros(All_Eigenvalues[:,2:end])
-        index = [collect(1:int(enum[1]));collect((int(enum[1])+2):end)]
-        All_Abs_Error_Approx[index,:] =  abs(All_Eigenvalues[index,2:end].-All_Eigenvalues[index,1:end-1])
-        All_Abs_Error_Approx[int(enum[1])+1,:] =  abs(All_Eigenvalues[int(enum[1])+1,2:end] .- enum[2])
+        All_Abs_Error_Approx[[collect(1:round(Int,enum[1]));collect((round(Int,enum[1]+2):end))],:] =  abs(All_Eigenvalues[[collect(1:round(Int,enum[1]));collect((round(Int,enum[1]+2):end))],2:end].-All_Eigenvalues[[collect(1:round(Int,enum[1]));collect((round(Int,enum[1]+2):end))],1:end-1])
+        All_Abs_Error_Approx[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues[round(Int,enum[1]+1),2:end] .- enum[2])
     end # if loop
 
     #Finding which Eigenvalues satisfy the condition Absolute Error Approxmiation < tol
@@ -257,10 +256,10 @@ function  Convergence_Analysis{T<:Number}(All_Eigenvalues::Matrix{T},tol::T,Matr
     # number of eigenvalues that satisfy the condition Error<tol
     num_eig_less_than_tol = length(Posi_index)
     # Find the optimal value of N for the eignvalues from the list Posi_index
-    idx = [Eig_less_than_tol_posi[Posi_index[j]]+1 for j in 1:num_eig_less_than_tol]
+    idx = [Eig_less_than_tol_posi[Posi_index[j]]+1 for j in collect(1:num_eig_less_than_tol)]
     # Find the value of the eigenvalues and Relative Error Approximation for the eignvalues from the list Posi_index
-    Error = [All_Abs_Error_Approx[Posi_index[i],idx[i]-1] for i in 1:num_eig_less_than_tol]
-    Eigenvalues = [All_Eigenvalues[Posi_index[i],idx[i]] for i in 1:num_eig_less_than_tol]
+    Error = [All_Abs_Error_Approx[Posi_index[i],idx[i]-1] for i in collect(1:num_eig_less_than_tol)]
+    Eigenvalues = [All_Eigenvalues[Posi_index[i],idx[i]] for i in collect(1:num_eig_less_than_tol)]
     # Display wanted results
     Eig_number = Posi_index.-1
     MatrixSizeOpt = MatrixSizes[idx]
@@ -288,9 +287,9 @@ function SincEigenStop{T<:Number}(q::Function , ρ::Function , domain::Domain{T}
     n += 1
 
     h,k = h_and_k(n,β,γ,dopt)
-    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
-    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
-    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) 
+    D2 = Symmetric(diagm(rhotilde(k*h)))                
+    E = eigvals(A,D2)                                  
     Eigenvalue_enum_new = E[enum[1]+1]
     Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
 
@@ -298,15 +297,15 @@ function SincEigenStop{T<:Number}(q::Function , ρ::Function , domain::Domain{T}
     Eigenvalue_enum_old = Eigenvalue_enum_new
     n += 1
     h,k = h_and_k(n,β,γ,dopt)
-    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
-    D2 = Symmetric(diagm(rhotilde(k*h)))                # Construct Diagonal pos. def. matrix D^2.
-    E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
+    A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) 
+    D2 = Symmetric(diagm(rhotilde(k*h)))                
+    E = eigvals(A,D2)                                   
     Eigenvalue_enum_new = E[enum[1]+1]
     Abs_Error_enum = isnan(enum[2]) ? abs(Eigenvalue_enum_new- Eigenvalue_enum_old) : abs(Eigenvalue_enum_new - enum[2])
     end #while loop
 
     v = eigvecs(A,D2)[:,enum[1]+1]
-    return (enum[1],int(length(k)),Eigenvalue_enum_new,Abs_Error_enum,v,h,k)
+    return (enum[1],round(Int,length(k)),Eigenvalue_enum_new,Abs_Error_enum,v,h,k)
 
 end #function
 
