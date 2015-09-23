@@ -242,7 +242,7 @@ function  Convergence_Analysis{T<:Number}(All_Eigenvalues::Matrix{T},tol::T,Matr
         All_Abs_Error_Approx  = abs(All_Eigenvalues[:,2:end].-All_Eigenvalues[:,1:end-1])
     else
         All_Abs_Error_Approx = zeros(All_Eigenvalues[:,2:end])
-        All_Abs_Error_Approx[[collect(1:round(Int,enum[1]));collect((round(Int,enum[1]+2):end))],:] =  abs(All_Eigenvalues[[collect(1:round(Int,enum[1]));collect((round(Int,enum[1]+2):end))],2:end].-All_Eigenvalues[[collect(1:round(Int,enum[1]));collect((round(Int,enum[1]+2):end))],1:end-1])
+        All_Abs_Error_Approx[[collect(1:round(Int,enum[1]));collect(round(Int,enum[1]+2):end)],:] =  abs(All_Eigenvalues[[collect(1:round(Int,enum[1]));collect(round(Int,enum[1]+2):end)],2:end].-All_Eigenvalues[[collect(1:round(Int,enum[1]));collect(round(Int,enum[1]+2):end)],1:(end-1)])
         All_Abs_Error_Approx[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues[round(Int,enum[1]+1),2:end] .- enum[2])
     end # if loop
 
