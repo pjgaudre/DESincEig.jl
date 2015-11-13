@@ -225,7 +225,7 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
             x = sqrt(2).*Temp[N[i]+1,:]
             # Solving Generalized eigenvalue problems.
             E1 = eigvals(Symmetric(A-JC),Symmetric(diagm(rhotilde(k*h))))
-            E2 = eigvals(Symmetric([q x;x' A+JC]),Symmetric(diagm([rhotilde(0.0), rhotilde(k*h)])))
+            E2 = eigvals(Symmetric([q  x ; x' A+JC]),Symmetric(diagm([rhotilde([0.0]), rhotilde(k*h)])))
             odd_eigen[1:length(E1),i] = E1
             even_eigen[1:length(E2),i] = E2
         end
@@ -237,7 +237,7 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
          else
             enum_odd = [NaN,NaN]
             enum_even = enum
-            enum_even[1] = 2*enum[1]
+            enum_even[1] = 2*enum[1]-2
          end
         (RESULTS_odd,All_Abs_Error_Approx_odd) = Convergence_Analysis(odd_eigen,tol,N+0.0,enum_odd)
         (RESULTS_even,All_Abs_Error_Approx_even) = Convergence_Analysis(even_eigen,tol,N.+1.0,enum_even)
