@@ -159,93 +159,102 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
     rhotilde(t) = ρ(ϕ(t)).*ϕp2(t)
     # Determining step sizes and left and right collocation points based on asymptotic information.
     if γ[1]>γ[2]
-        n = M = Range
-        gam = γ[1]
-        beta = β[1]
-        hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
-        N = max( ceil( (γ[1]/γ[2]).*n .+ log(β[1]/β[2])./ (γ[2].*hoptimal) ) , 0 )
+          n = M = Range
+          gam = γ[1]
+          beta = β[1]
+          hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
+          N = max( ceil( (γ[1]/γ[2]).*n .+ log(β[1]/β[2])./ (γ[2].*hoptimal) ) , 0 )
     elseif γ[2]>γ[1]
-        n = N = Range
-        gam = γ[2]
-        beta = β[2]
-        hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
-        M = max( floor( (γ[2]/γ[1]).*n .+ log(β[2]/β[1])./ (γ[1].*hoptimal) ) , 0 )
+          n = N = Range
+          gam = γ[2]
+          beta = β[2]
+          hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
+          M = max( floor( (γ[2]/γ[1]).*n .+ log(β[2]/β[1])./ (γ[1].*hoptimal) ) , 0 )
     elseif γ[1] == γ[2] && β[1] > β[2]
-        n = M = Range
-        gam = γ[1]
-        beta = β[1]
-        hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
-        N = ceil( n .+ log(β[1]/β[2])./ (γ[2].*hoptimal) )
+          n = M = Range
+          gam = γ[1]
+          beta = β[1]
+          hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
+          N = ceil( n .+ log(β[1]/β[2])./ (γ[2].*hoptimal) )
     elseif γ[1] == γ[2] && β[1] < β[2]
-        n = N = Range
-        gam = γ[2]
-        beta = β[2]
-        hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
-        M = floor(n .+ log(β[2]/β[1])./ (γ[1].*hoptimal) )
+          n = N = Range
+          gam = γ[2]
+          beta = β[2]
+          hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
+          M = floor(n .+ log(β[2]/β[1])./ (γ[1].*hoptimal) )
     elseif γ[1] == γ[2] && β[1] == β[2]
-        n = N = Range
-        M = 1.0*N
-        gam = γ[2]
-        beta = β[2]
-        if Trace_Mesh == true
-            diag_sinc_matrix(t) = (ψtilde(domain,H[1][t] .+ (3/4).*(H[3][t]./H[2][t].^2).^2 .-(H[4][t]./2H[2][t].^3))./ψp(domain,H[1][t]).^2 .+ q(ϕ(t)))./ρ(ϕ(t))
-            hoptimal = [optimize(h->sum( diag_sinc_matrix(collect(-N[i]:N[i])*h).+ (pi^2/(3h^2))./ rhotilde(collect(-N[i]:N[i])*h) ),0.001,(3.0*u0+log(pi*dopt*gam*i/beta))./(gam*i)).minimum for i in collect(1:length(n))]
-        elseif Trace_Mesh == false
-            hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
-        end #if loop
+          n = N = Range
+          M = 1.0*N
+          gam = γ[2]
+          beta = β[2]
+          if Trace_Mesh == true
+               diag_sinc_matrix(t) = (ψtilde(domain,H[1][t] .+ (3/4).*(H[3][t]./H[2][t].^2).^2 .-(H[4][t]./2H[2][t].^3))./ψp(domain,H[1][t]).^2 .+ q(ϕ(t)))./ρ(ϕ(t))
+               hoptimal = [optimize(h->sum( diag_sinc_matrix(collect(-N[i]:N[i])*h).+ (pi^2/(3h^2))./ rhotilde(collect(-N[i]:N[i])*h) ),0.001,(3.0*u0+log(pi*dopt*gam*i/beta))./(gam*i)).minimum for i in collect(1:length(n))]
+          elseif Trace_Mesh == false
+               hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
+          end #if loop
     end # if loop
 
     #  INITIAL CONDITIONS
-    Length = length(Range)                                          # Length of the vectors in the following algorithm given the previous conditions
+    Length = length(Range)                                            # Length of the vectors in the following algorithm given the previous conditions
     if Centro==false
-        MatrixSizes = N.+M.+1                                       # Array of all square matrix sizes for every iteration.
-        All_Eigenvalues = zeros(round(Int,MatrixSizes[end]),Length) # Matrix used for storing all obtained eigenvalues as columns at every iteration.
-        for i = 1:Length
-            h = hoptimal[i]                                         # Mesh size used at every iteration.
-            k = collect(-M[i]:N[i])                                 # Vector of Mesh points.
-            A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2)     # Construct symmetric A matrix.
-            D2 = Symmetric(diagm(rhotilde(k*h)))                    # Construct Diagonal pos. def. matrix D^2
-            E = eigvals(A,D2)                                       # Solving Generalized eigenvalue problem.
-            All_Eigenvalues[1:length(E),i] = E                      # Storing all eigenvalues in columns in matrix All_Eigenvalues.
-        end
-        ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
-        (RESULTS, All_Abs_Error_Approx) = Convergence_Analysis(All_Eigenvalues,tol,MatrixSizes,enum)     
-        (RESULTS, All_Abs_Error_Approx, hoptimal, n, MatrixSizes)
+          MatrixSizes = N.+M.+1                                       # Array of all square matrix sizes for every iteration.
+          All_Eigenvalues = zeros(round(Int,MatrixSizes[end]),Length) # Matrix used for storing all obtained eigenvalues as columns at every iteration.
+          for i = 1:Length
+               h = hoptimal[i]                                        # Mesh size used at every iteration.
+               k = collect(-M[i]:N[i])                                # Vector of Mesh points.
+               A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2)    # Construct symmetric A matrix.
+               D2 = Symmetric(diagm(rhotilde(k*h)))                   # Construct Diagonal pos. def. matrix D^2
+               E = eigvals(A,D2)                                      # Solving Generalized eigenvalue problem.
+               All_Eigenvalues[1:length(E),i] = E                     # Storing all eigenvalues in columns in matrix All_Eigenvalues.
+          end
+          # Calculating an Approximation to the Absolute Error for all Energy values
+          if isnan(enum[1]*enum[2]) == true
+               All_Abs_Error_Approx  = abs(All_Eigenvalues[:,2:end].-All_Eigenvalues[:,1:end-1])
+          else
+               All_Abs_Error_Approx = zeros(All_Eigenvalues[:,2:end])
+               All_Abs_Error_Approx[[collect(1:round(Int,enum[1]));collect(round(Int,enum[1]+2):end)],:] =  abs(All_Eigenvalues[[collect(1:round(Int,enum[1]));collect(round(Int,enum[1]+2):end)],2:end].-All_Eigenvalues[[collect(1:round(Int,enum[1]));collect(round(Int,enum[1]+2):end)],1:(end-1)])
+               All_Abs_Error_Approx[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues[round(Int,enum[1]+1),2:end] .- enum[2])
+          end # if loop
+          ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
+          RESULTS = Convergence_Analysis(All_Eigenvalues,tol,MatrixSizes,All_Abs_Error_Approx)     
+          (RESULTS, All_Abs_Error_Approx, hoptimal, n, MatrixSizes)
     elseif Centro==true
-        odd_eigen = zeros(Range[end],Length)
-        even_eigen = zeros(Range[end]+1,Length)
-        for i = 1:Length
-            h = hoptimal[i]
-            k = collect(-N[i]:-1).*1.0
-            j = collect(-N[i]:N[i]).*1.0
-            Temp = -sinc(2,k'.-j)./h^2
-            A = diagm(qtilde(k*h)) .+ Temp[1:N[i],:]
-            JC = flipdim(Temp[N[i]+2:2N[i]+1,:],1)
-            q = qtilde(0.0).+ (pi^2/(3h^2))
-            x = sqrt(2).*Temp[N[i]+1,:]
-            # Solving Generalized eigenvalue problems.
-            E1 = eigvals(Symmetric(A-JC),Symmetric(diagm(rhotilde(k*h))))
-            E2 = eigvals(Symmetric([q  x ; x' A+JC]),Symmetric(diagm(rhotilde([0.0;k]*h))))
-            odd_eigen[1:length(E1),i] = E1
-            even_eigen[1:length(E2),i] = E2
-        end
-        ## Ouputing the convergence analysisof the algorithm given the number of iterations and the tolerance level tol.
-         if isodd(enum[1]) 
-            enum_odd = enum
-            enum_odd[1] = 2*enum[1]-1
-            enum_even = [NaN,NaN]
-         else
-            enum_odd = [NaN,NaN]
-            enum_even = enum
-            enum_even[1] = 2*enum[1]-2
-         end
-        (RESULTS_odd,All_Abs_Error_Approx_odd) = Convergence_Analysis(odd_eigen,tol,N+0.0,enum_odd)
-        (RESULTS_even,All_Abs_Error_Approx_even) = Convergence_Analysis(even_eigen,tol,N.+1.0,enum_even)
-        RESULTS_odd[:,1] = 2.*RESULTS_odd[:,1].-1
-        RESULTS_even[:,1] = 2.*RESULTS_even[:,1].-2
-        RESULTS = sortrows([RESULTS_odd,RESULTS_even])
-        (RESULTS, (All_Abs_Error_Approx_even,All_Abs_Error_Approx_odd), hoptimal, n, (N+1,N))        
-    end
+          All_Eigenvalues_even = zeros(round(Int,Range[end]+1),Length)
+          All_Eigenvalues_odd = zeros(round(Int,Range[end]),Length)
+          for i = 1:Length
+               h = hoptimal[i]
+               k = collect(-N[i]:-1).*1.0
+               j = collect(-N[i]:N[i]).*1.0
+               Temp = -sinc(2,k'.-j)./h^2
+               A = diagm(qtilde(k*h)) .+ Temp[1:N[i],:]
+               JC = flipdim(Temp[N[i]+2:2N[i]+1,:],1)
+               q = qtilde(0.0).+ (pi^2/(3h^2))
+               x = sqrt(2).*Temp[N[i]+1,:]
+               # Solving Generalized eigenvalue problems.
+               E_odd = eigvals(Symmetric(A-JC),Symmetric(diagm(rhotilde(k*h))))
+               E_even = eigvals(Symmetric([q  x ; x' A+JC]),Symmetric(diagm(rhotilde([0.0;k]*h))))
+               All_Eigenvalues_even[1:length(E_even),i] = E_even
+               All_Eigenvalues_odd[1:length(E_odd),i] = E_odd
+          end
+          # Calculating an Approximation to the Absolute Error for all Energy values
+          All_Abs_Error_Approx_even  = abs(All_Eigenvalues_even[:,2:end].-All_Eigenvalues_even[:,1:end-1])
+          All_Abs_Error_Approx_odd  = abs(All_Eigenvalues_odd[:,2:end].-All_Eigenvalues_odd[:,1:end-1])
+          if  isodd(enum[1]) 
+               enum[1]=2*enum[1]-1
+               All_Abs_Error_Approx_odd[round(Int,enum[1]+1),2:end] =  abs(All_Eigenvalues_odd[round(Int,enum[1]+1),2:end] .- enum[2])
+          elseif iseven(enum[1]) 
+               enum[1]=2*enum[1]-2
+               All_Abs_Error_Approx_even[round(Int,enum[1]+1),2:end] =  abs(All_Eigenvalues_even[round(Int,enum[1]+1),2:end] .- enum[2])
+          end # if loop
+          ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
+          RESULTS_odd = Convergence_Analysis(odd_eigen,tol,N+0.0,All_Abs_Error_Approx_odd)
+          RESULTS_even = Convergence_Analysis(even_eigen,tol,N.+1.0,All_Abs_Error_Approx_even)
+          RESULTS_odd[:,1] = 2.*RESULTS_odd[:,1].-1
+          RESULTS_even[:,1] = 2.*RESULTS_even[:,1].-2
+          RESULTS = sortrows([RESULTS_odd,RESULTS_even])
+          (RESULTS, (All_Abs_Error_Approx_even,All_Abs_Error_Approx_odd), hoptimal, n, (N+1,N))     
+     end
 end
 ######################################################################################################################################
 
@@ -271,16 +280,7 @@ All_Abs_Error_Approx::Matrix{T}
 Row i, Column j = approximations to the absolute error for eigenvalue number "n=i-1" when the matrix size = MatrixSizes[j].
 =#
 
-function  Convergence_Analysis{T<:Number}(All_Eigenvalues::Matrix{T},tol::T,MatrixSizes::Vector{T},enum::Vector{T})
-    # Calculating an Approximation to the Absolute Error for all Energy values
-    if isnan(enum[1]) || isnan(enum[2]) == true
-        All_Abs_Error_Approx  = abs(All_Eigenvalues[:,2:end].-All_Eigenvalues[:,1:end-1])
-    else
-        All_Abs_Error_Approx = zeros(All_Eigenvalues[:,2:end])
-        All_Abs_Error_Approx[[collect(1:round(Int,enum[1]));collect(round(Int,enum[1]+2):end)],:] =  abs(All_Eigenvalues[[collect(1:round(Int,enum[1]));collect(round(Int,enum[1]+2):end)],2:end].-All_Eigenvalues[[collect(1:round(Int,enum[1]));collect(round(Int,enum[1]+2):end)],1:(end-1)])
-        All_Abs_Error_Approx[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues[round(Int,enum[1]+1),2:end] .- enum[2])
-    end # if loop
-
+function  Convergence_Analysis{T<:Number}(All_Eigenvalues::Matrix{T},tol::T,MatrixSizes::Vector{T},All_Abs_Error_Approx::Matrix{T})
     #Finding which Eigenvalues satisfy the condition Absolute Error Approxmiation < tol
     m = size(All_Abs_Error_Approx)[1]
     First_Non_Zero = [findfirst(All_Abs_Error_Approx[i,:]) for i in collect(1:m)]
@@ -298,7 +298,7 @@ function  Convergence_Analysis{T<:Number}(All_Eigenvalues::Matrix{T},tol::T,Matr
     # Display wanted results
     Eig_number = Posi_index.-1
     MatrixSizeOpt = MatrixSizes[idx]
-    ([Eig_number MatrixSizeOpt Eigenvalues Error], All_Abs_Error_Approx)
+    [Eig_number MatrixSizeOpt Eigenvalues Error]
 end
 ######################################################################################################################################
 
