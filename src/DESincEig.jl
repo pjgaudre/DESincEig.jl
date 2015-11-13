@@ -35,16 +35,18 @@ ________________________________________________________________________________
 
 
 References:
-  1.  N. Eggert, M. Jarratt, and J. Lund. Sinc function computation of the eigenvalues of
-              Sturm-Liouville problems. SIAM Journal of Computational Physics,
-              69:209-229, 1987
-  2.  P. Gaudreau, R.M. Slevinsky, and H. Safouhi. The Double Exponential Sinc Collocation
-              Method for Singular Sturm-Liouville Problems. arXiv:1409.7471v2, 2014
-  3.  R.M. Slevinsky and S. Olver. On the use of conformal maps for the acceleration of
-              convergence of the trapezoidal rule and Sinc numerical methods.
-              arXiv:1406:3320, 2014
-  4.  R.M. Corless, G.H. Gonnet, D.E.G. Hare, D.J. Jeffrey, D.E. Knuth, On the Lambert W function.
-              Advances in Computational Mathematics, 5(1):329-359, 1996
+1.   N. Eggert, M. Jarratt, and J. Lund. Sinc function computation of the eigenvalues of
+          Sturm-Liouville problems. SIAM Journal of Computational Physics,
+          69:209-229, 1987
+2.   P. Gaudreau, R.M. Slevinsky, and H. Safouhi. The Double Exponential Sinc Collocation
+          Method for Singular Sturm-Liouville Problems. arXiv:1409.7471v2, 2014
+3.   R.M. Slevinsky and S. Olver. On the use of conformal maps for the acceleration of
+          convergence of the trapezoidal rule and Sinc numerical methods.
+          arXiv:1406:3320, 2014
+4.   R.M. Corless, G.H. Gonnet, D.E.G. Hare, D.J. Jeffrey, D.E. Knuth, On the Lambert W function.
+          Advances in Computational Mathematics, 5(1):329-359, 1996
+5.   P. Gaudreau, and H. Safouhi. Centrosymmetric Matrices in the Sinc Collocation Method for
+          Sturm-Liouville Problems. arXiv:1507.06709v1, 2015
 =#
 
 using SincFun, Optim
@@ -123,13 +125,13 @@ Necessary parameters
 6. d:: Number,           min{ π/2max{γL,γR} , s }
 ____________________________________________________________________________________________________________________
 Extra parameters ( not necessary but can offer more options )
-7. enum::Vector{T},         [n,tv]: Default is [NaN,NaN]
+7. enum::Vector{T},         [n,tv]: Default = [NaN,NaN]
                             n ∈ {0,1,2,3,...} :  Eigenvalue number
                             tv = λ_{n} : True Value for eigenvalue λ_{n}
                             If specified, the absolute error is computed instead of the absolute error approximation
                             of the DESCM w.r.t. to λ_{n} will be returned.
 
-8. tol::T,                  tolerance level: Default is 5e-12
+8. tol::T,                  tolerance level: Default = 5e-12
                             tol is used to find the optimal Matrix Size in order for the approximate eigenvalue
                             μ to have an an aprroximation to the absolute error less than tol.
 
@@ -145,8 +147,12 @@ Extra parameters ( not necessary but can offer more options )
 12. Trace_Mesh::Bool         Default = false
 If true, the mesh size will be computed by minimizing the trace of the matrix D^(-1)HD^(-1).
 resulting from the DESCM. For even functions q(x) and ρ(x) and an infinite domain: Domain = Infinite1 or Infinite2,
-once can minimize this functional to obtain an alternate mesh size: htilde. This alternate mesh-size has proven
+one can minimize this functional to obtain an alternate mesh size: htilde. This alternate mesh-size has proven
 to be better suited for highly-oscillatory functions q(x). This functional is minimized using the Julia package: Optim.
+
+13. Centro::Bool              Default = false
+As demonstrated in reference [5], if the function q(x) and ρ(x) are even on an infinite domain, the sinc matices are
+also centrosymmetric. Hence, If Centro is set to true, the simpifications detailed in reference [5] are implemented.
 _______________________________________________________________________________________________________________________
 =#
 function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vector{T},γ::Vector{T},dopt::T; enum::Vector{T}=[NaN;NaN], tol::T=5e-12, Range::Vector{Int64}=collect(1:1:100), u0::T=one(T), u::Vector{T}=[zero(T)], Trace_Mesh::Bool=false,Centro::Bool=false)
@@ -270,6 +276,9 @@ Input: All_Eigenvalues::Matrix{T},         Matrix containing all eigenvalues com
        tol::T,                             Tolerance level
        MatrixSizes::Vector{T},             Vector of matrix size used in the algorithm SincEigen
        enum::Vector{T},                    Vector of given eigenvalue number and corresponding eigenvalue if known.
+       All_Abs_Error_Approx::Matrix{T}     Matrix containing the sequence of approximations to the absolute error for every eigenvalue obtained in the SincEigen algorithm
+                                           Row i, Column j = approximations to the absolute error for eigenvalue number "n=i-1" when the matrix size = MatrixSizes[j].
+
 
 Output:
 RESULTS=[Eig_number MatrixSizeOpt Eigenvalues Error]::Matrix{T},
@@ -278,9 +287,6 @@ RESULTS=[Eig_number MatrixSizeOpt Eigenvalues Error]::Matrix{T},
     Second column: The optimal matrix size needed to achieve "tol".
     Third column: Estimated eigenvalue
     Fourth column: Approximation to the absolute error
-All_Abs_Error_Approx::Matrix{T}
-    Matrix containing the sequence of approximations to the absolute error for every eigenvalue obtained in the SincEigen algorithm
-Row i, Column j = approximations to the absolute error for eigenvalue number "n=i-1" when the matrix size = MatrixSizes[j].
 =#
 
 function  Convergence_Analysis{T<:Number}(All_Eigenvalues::Matrix{T},tol::T,MatrixSizes::Vector{T},All_Abs_Error_Approx::Matrix{T})
