@@ -5,7 +5,7 @@ using DESincEig, SincFun, Base.Test
 println("Testing Example 1")
 f(x) = (35/4)./x.^2  .- 2 .+ x.^2 /16
 (RESULTS, All_Abs_Error_Approx , hoptimal , n, MatrixSizes) = SincEigen( f , ones , SemiInfinite1{Float64}() , [1.5;0.03125] , [1.0;2.0] , pi/4, tol=1e-10 )
-@test norm(RESULTS[1:7,3]-collect(0.0:6.0)) < sqrt(eps())
+@test norm(RESULTS[1:5,3]-collect(0.0:6.0)) < sqrt(eps())
 
 println("Testing quartic anharmonic oscillators")
 # Exact values for the ground states from E. J. Weniger, Ann. Phys. 246:133--165, 1996.
