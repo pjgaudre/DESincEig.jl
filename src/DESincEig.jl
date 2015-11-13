@@ -240,12 +240,14 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
           # Calculating an Approximation to the Absolute Error for all Energy values
           All_Abs_Error_Approx_even  = abs(All_Eigenvalues_even[:,2:end].-All_Eigenvalues_even[:,1:end-1])
           All_Abs_Error_Approx_odd  = abs(All_Eigenvalues_odd[:,2:end].-All_Eigenvalues_odd[:,1:end-1])
-          if  isodd(round(Int,enum[1])) 
-               enum[1]=(enum[1]+1)/2
-               All_Abs_Error_Approx_odd[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues_odd[round(Int,enum[1]+1),2:end] .- enum[2])
-          elseif iseven(round(Int,enum[1])) 
-               enum[1]=(enum[1]+2)/2
-               All_Abs_Error_Approx_even[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues_even[round(Int,enum[1]+1),2:end] .- enum[2])
+          if isnan(enum[1]) == false
+               if  isodd(round(Int,enum[1])) 
+                    enum[1]=(enum[1]+1)/2
+                    All_Abs_Error_Approx_odd[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues_odd[round(Int,enum[1]+1),2:end] .- enum[2])
+               elseif iseven(round(Int,enum[1])) 
+                    enum[1]=(enum[1]+2)/2
+                    All_Abs_Error_Approx_even[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues_even[round(Int,enum[1]+1),2:end] .- enum[2])
+               end # if loop
           end # if loop
           ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
           RESULTS_odd = Convergence_Analysis(All_Eigenvalues_odd,tol,N+0.0,All_Abs_Error_Approx_odd)
@@ -281,7 +283,7 @@ Row i, Column j = approximations to the absolute error for eigenvalue number "n=
 
 function  Convergence_Analysis{T<:Number}(All_Eigenvalues::Matrix{T},tol::T,MatrixSizes::Vector{T},All_Abs_Error_Approx::Matrix{T})
     #Finding which Eigenvalues satisfy the condition Absolute Error Approxmiation < tol
-    m = size(All_Abs_Error_Approx)[1]
+    m = size(All_Abs_Error_Approx,1)
     First_Non_Zero = [findfirst(All_Abs_Error_Approx[i,:]) for i in collect(1:m)]
     Less_than_tol_matrix =  All_Abs_Error_Approx .< tol
     Eig_less_than_tol_posi = [findnext(Less_than_tol_matrix[i,:], true, First_Non_Zero[i]) for i in collect(1:m)]
