@@ -149,7 +149,7 @@ once can minimize this functional to obtain an alternate mesh size: htilde. This
 to be better suited for highly-oscillatory functions q(x). This functional is minimized using the Julia package: Optim.
 _______________________________________________________________________________________________________________________
 =#
-function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vector{T},γ::Vector{T},dopt::T;enum::Vector{T}=[NaN;NaN], tol::T=5e-12, Range::Vector{Int64}=collect(1:1:100), u0::T=one(T), u::Vector{T}=[zero(T)], Trace_Mesh::Bool=false)
+function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vector{T},γ::Vector{T},dopt::T; enum::Vector{T}=[NaN;NaN], tol::T=5e-12, Range::Vector{Int64}=collect(1:1:100), u0::T=one(T), u::Vector{T}=[zero(T)], Trace_Mesh::Bool=false,Centro::Bool=false)
     # Functions used in Matrix construction.
     H = [ConformalMap(u0,u)]
     for i=1:3 push!(H,H[end]') end
@@ -196,21 +196,56 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
     end # if loop
 
     #  INITIAL CONDITIONS
-    Length = length(Range)                                # Length of the vectors in the following algorithm given the previous conditions
-    Eigenvalue_enum = zeros(Length)                       # Vector used for storing approximations to eigenvalue enum at every iteration.
-    MatrixSizes = N.+M.+1                                 # Array of all square matrix sizes for every iteration.
-    All_Eigenvalues = zeros(round(Int,MatrixSizes[end]),Length) # Matrix used for storing all obtained eigenvalues as columns at every iteration.
-    for i = 1:Length
-        h = hoptimal[i]                                     # Mesh size used at every iteration.
-        k = collect(-M[i]:N[i])                                    # Vector of Mesh points.
-        A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2) # Construct symmetric A matrix.
-        D2 = Symmetric(diagm(rhotilde(k*h)))                  # Construct Diagonal pos. def. matrix D^2
-        E = eigvals(A,D2)                                   # Solving Generalized eigenvalue problem.
-        All_Eigenvalues[1:length(E),i] = E                  # Storing all eigenvalues in columns in matrix All_Eigenvalues.
+    Length = length(Range)                                          # Length of the vectors in the following algorithm given the previous conditions
+    if Centro==false
+        MatrixSizes = N.+M.+1                                       # Array of all square matrix sizes for every iteration.
+        All_Eigenvalues = zeros(round(Int,MatrixSizes[end]),Length) # Matrix used for storing all obtained eigenvalues as columns at every iteration.
+        for i = 1:Length
+            h = hoptimal[i]                                         # Mesh size used at every iteration.
+            k = collect(-M[i]:N[i])                                 # Vector of Mesh points.
+            A = Symmetric(diagm(qtilde(k*h))-sinc(2,k'.-k)/h^2)     # Construct symmetric A matrix.
+            D2 = Symmetric(diagm(rhotilde(k*h)))                    # Construct Diagonal pos. def. matrix D^2
+            E = eigvals(A,D2)                                       # Solving Generalized eigenvalue problem.
+            All_Eigenvalues[1:length(E),i] = E                      # Storing all eigenvalues in columns in matrix All_Eigenvalues.
+        end
+        ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
+        (RESULTS, All_Abs_Error_Approx) = Convergence_Analysis(All_Eigenvalues,tol,MatrixSizes,enum)     
+        (RESULTS, All_Abs_Error_Approx, hoptimal, n, MatrixSizes)
+    elseif Centro==true
+        odd_eigen = zeros(Range[end],Length)
+        even_eigen = zeros(Range[end]+1,Length)
+        for i = 1:Length
+            h = hoptimal[i]
+            k = collect(-N[i]:-1)*1.0
+            j = collect(-N[i]:N[i])*1.0
+            Temp = -sinc(2,k'.-j)./h^2
+            A = diagm(qtilde(k*h)) .+ Temp[1:N[i],:]
+            JC = flipdim(Temp[N[i]+2:2N[i]+1,:],1)
+            q = qtilde(0.0).+ (pi^2/(3h^2))
+            x = sqrt(2).*Temp[N[i]+1,:]
+            # Solving Generalized eigenvalue problems.
+            E1 = eigvals(Symmetric(A-JC),Symmetric(diagm(rhotilde(k*h))))
+            E2 = eigvals(Symmetric([q x;x' A+JC]),Symmetric(diagm([rhotilde(0.0), rhotilde(k*h)])))
+            odd_eigen[1:length(E1),i] = E1
+            even_eigen[1:length(E2),i] = E2
+        end
+        ## Ouputing the convergence analysisof the algorithm given the number of iterations and the tolerance level tol.
+         if isodd(enum[1]) 
+            enum_odd = enum
+            enum_odd[1] = 2*enum[1]-1
+            enum_even = [NaN,NaN]
+         else
+            enum_odd = [NaN,NaN]
+            enum_even = enum
+            enum_even[1] = 2*enum[1]
+         end
+        (RESULTS_odd,All_Abs_Error_Approx_odd) = Convergence_Analysis(odd_eigen,tol,N+0.0,enum_odd)
+        (RESULTS_even,All_Abs_Error_Approx_even) = Convergence_Analysis(even_eigen,tol,N.+1.0,enum_even)
+        RESULTS_odd[:,1] = 2.*RESULTS_odd[:,1].-1
+        RESULTS_even[:,1] = 2.*RESULTS_even[:,1].-2
+        RESULTS = sortrows([RESULTS_odd,RESULTS_even])
+        (RESULTS, (All_Abs_Error_Approx_even,All_Abs_Error_Approx_odd), hoptimal, n, (N+1,N))        
     end
-    ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
-    (RESULTS, All_Abs_Error_Approx) = Convergence_Analysis(All_Eigenvalues,tol,MatrixSizes,enum)
-    (RESULTS, All_Abs_Error_Approx, hoptimal, n, MatrixSizes)
 end
 ######################################################################################################################################
 
