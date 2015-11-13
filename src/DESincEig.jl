@@ -242,17 +242,17 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
           All_Abs_Error_Approx_odd  = abs(All_Eigenvalues_odd[:,2:end].-All_Eigenvalues_odd[:,1:end-1])
           if  isodd(round(Int,enum[1])) 
                enum[1]=(enum[1]+1)/2
-               All_Abs_Error_Approx_odd[round(Int,enum[1]+1),2:end] =  abs(All_Eigenvalues_odd[round(Int,enum[1]+1),2:end] .- enum[2])
+               All_Abs_Error_Approx_odd[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues_odd[round(Int,enum[1]+1),1:end-1] .- enum[2])
           elseif iseven(round(Int,enum[1])) 
                enum[1]=(enum[1]+2)/2
-               All_Abs_Error_Approx_even[round(Int,enum[1]+1),2:end] =  abs(All_Eigenvalues_even[round(Int,enum[1]+1),2:end] .- enum[2])
+               All_Abs_Error_Approx_even[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues_even[round(Int,enum[1]+1),1:end-1] .- enum[2])
           end # if loop
           ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
           RESULTS_odd = Convergence_Analysis(All_Eigenvalues_odd,tol,N+0.0,All_Abs_Error_Approx_odd)
           RESULTS_even = Convergence_Analysis(All_Eigenvalues_even,tol,N.+1.0,All_Abs_Error_Approx_even)
-          RESULTS_odd[:,1] = 2.*RESULTS_odd[:,1].-1
-          RESULTS_even[:,1] = 2.*RESULTS_even[:,1].-2
-          RESULTS = sortrows([RESULTS_odd,RESULTS_even])
+          RESULTS_odd[:,1] = 2.*RESULTS_odd[:,1].+1
+          RESULTS_even[:,1] = 2.*RESULTS_even[:,1]
+          RESULTS = sortrows([RESULTS_odd;RESULTS_even])
           (RESULTS, (All_Abs_Error_Approx_even,All_Abs_Error_Approx_odd), hoptimal, n, (N+1,N))     
      end
 end
