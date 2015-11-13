@@ -216,8 +216,8 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
         even_eigen = zeros(Range[end]+1,Length)
         for i = 1:Length
             h = hoptimal[i]
-            k = collect(-N[i]:-1)*1.0
-            j = collect(-N[i]:N[i])*1.0
+            k = collect(-N[i]:-1).*1.0
+            j = collect(-N[i]:N[i]).*1.0
             Temp = -sinc(2,k'.-j)./h^2
             A = diagm(qtilde(k*h)) .+ Temp[1:N[i],:]
             JC = flipdim(Temp[N[i]+2:2N[i]+1,:],1)
@@ -225,7 +225,7 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
             x = sqrt(2).*Temp[N[i]+1,:]
             # Solving Generalized eigenvalue problems.
             E1 = eigvals(Symmetric(A-JC),Symmetric(diagm(rhotilde(k*h))))
-            E2 = eigvals(Symmetric([q  x ; x' A+JC]),Symmetric(diagm(rhotilde([0.0,k]*h))))
+            E2 = eigvals(Symmetric([q  x ; x' A+JC]),Symmetric(diagm(rhotilde([0.0;k]*h))))
             odd_eigen[1:length(E1),i] = E1
             even_eigen[1:length(E2),i] = E2
         end
