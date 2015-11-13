@@ -229,11 +229,11 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
                Temp = -sinc(2,k'.-j)./h^2
                A = diagm(qtilde(k*h)) .+ Temp[1:N[i],:]
                JC = flipdim(Temp[N[i]+2:2N[i]+1,:],1)
-               q = qtilde(0.0).+ (pi^2/(3h^2))
+               qc = qtilde(0.0).+ (pi^2/(3h^2))
                x = sqrt(2).*Temp[N[i]+1,:]
                # Solving Generalized eigenvalue problems.
                E_odd = eigvals(Symmetric(A-JC),Symmetric(diagm(rhotilde(k*h))))
-               E_even = eigvals(Symmetric([q  x ; x' A+JC]),Symmetric(diagm(rhotilde([0.0;k]*h))))
+               E_even = eigvals(Symmetric([qc  x ; x' A+JC]),Symmetric(diagm(rhotilde([0.0;k]*h))))
                All_Eigenvalues_even[1:length(E_even),i] = E_even
                All_Eigenvalues_odd[1:length(E_odd),i] = E_odd
           end
