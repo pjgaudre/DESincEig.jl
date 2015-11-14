@@ -155,7 +155,7 @@ As demonstrated in reference [5], if the function q(x) and ρ(x) are even on an 
 also centrosymmetric. Hence, If Centro is set to true, the simpifications detailed in reference [5] are implemented.
 _______________________________________________________________________________________________________________________
 =#
-function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vector{T},γ::Vector{T},dopt::T; enum::Tuple{Int,T}=(0,NaN), tol::T=5e-12, Range::Vector{Int64}=collect(1:1:100), u0::T=one(T), u::Vector{T}=[zero(T)], Trace_Mesh::Bool=false,Centro::Bool=false)
+function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vector{T},γ::Vector{T},dopt::T; enum::Tuple{Int64,Any}=(0,NaN), tol::T=5e-12, Range::Vector{Int64}=collect(1:1:100), u0::T=one(T), u::Vector{T}=[zero(T)], Trace_Mesh::Bool=false,Centro::Bool=false)
     # Functions used in Matrix construction.
     H = [ConformalMap(u0,u)]
     for i=1:3 push!(H,H[end]') end
