@@ -249,11 +249,11 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
           All_Abs_Error_Approx_odd  = abs(All_Eigenvalues_odd[:,2:end].-All_Eigenvalues_odd[:,1:end-1])
           if isnan(enum[2]) == false
             if  isodd(enum[1]) 
-                enum[1]=round(Int,(enum[1]+1)/2)
-                All_Abs_Error_Approx_odd[enum[1]+1,:] =  abs(All_Eigenvalues_odd[enum[1]+1,2:end] .- enum[2])
+                index=round(Int,(enum[1]+1)/2)
+                All_Abs_Error_Approx_odd[index+1,:] =  abs(All_Eigenvalues_odd[index+1,2:end] .- enum[2])
             elseif iseven(enum[1]) 
-                enum[1]=round(Int,(enum[1]+2)/2)
-                All_Abs_Error_Approx_even[enum[1]+1,:] =  abs(All_Eigenvalues_even[enum[1]+1,2:end] .- enum[2])
+                index=round(Int,(enum[1]+2)/2)
+                All_Abs_Error_Approx_even[index+1,:] =  abs(All_Eigenvalues_even[index+1,2:end] .- enum[2])
             end # if loop
           end
           ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
