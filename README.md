@@ -102,6 +102,6 @@ SincEigen(V, ones, Infinite2{Float64}(), [0.125,0.125] , [2.0,2.0] , pi/4 )
 3.  R. M. Slevinsky and S. Olver. <a href="http://dx.doi.org/10.1137/140978363">On the use of conformal maps for the               acceleration of convergence of the trapezoidal rule and Sinc numerical methods</a>, SIAM J. Sci. Comput.,                    37:A676--A700, 2015. An earlier version appears here: <a href="http://arxiv.org/abs/1406.3320"> arXiv:1406.3320</a>.
 4.  R.M. Corless, G.H. Gonnet, D.E.G. Hare, D.J. Jeffrey, D.E. Knuth, <a                                                           href="http://link.springer.com/article/10.1007%2FBF02124750"> On the Lambert W function</a>. Advances in Computational       Mathematics, 5(1):329-359, 1996.
 5.  P. Gaudreau, R.M. Slevinsky, and H. Safouhi, <a href="http://dx.doi.org/10.1016/j.aop.2015.05.026"> Computing energy           eigenvalues of anharmonic oscillators using the double exponential Sinc collocation method</a>, Annals of Physics,           360:520-538, 2015.
-
+6.   P. Gaudreau, and H. Safouhi. Centrosymmetric Matrices in the Sinc Collocation Method for Sturm-Liouville Problems. arXiv:1507.06709v1, 2015
 
 
