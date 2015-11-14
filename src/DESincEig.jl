@@ -125,7 +125,7 @@ Necessary parameters
 6. d:: Number,           min{ π/2max{γL,γR} , s }
 ____________________________________________________________________________________________________________________
 Extra parameters ( not necessary but can offer more options )
-7. enum::Vector{T},         [n,tv]: Default = [NaN,NaN]
+7. enum::Tuple{Int,T}         (n,tv): Default = (0,NaN)
                             n ∈ {0,1,2,3,...} :  Eigenvalue number
                             tv = λ_{n} : True Value for eigenvalue λ_{n}
                             If specified, the absolute error is computed instead of the absolute error approximation
@@ -155,7 +155,7 @@ As demonstrated in reference [5], if the function q(x) and ρ(x) are even on an 
 also centrosymmetric. Hence, If Centro is set to true, the simpifications detailed in reference [5] are implemented.
 _______________________________________________________________________________________________________________________
 =#
-function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vector{T},γ::Vector{T},dopt::T; enum::Vector{T}=[NaN;NaN], tol::T=5e-12, Range::Vector{Int64}=collect(1:1:100), u0::T=one(T), u::Vector{T}=[zero(T)], Trace_Mesh::Bool=false,Centro::Bool=false)
+function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vector{T},γ::Vector{T},dopt::T; enum::Tuple{Int,T}=(0;NaN), tol::T=5e-12, Range::Vector{Int64}=collect(1:1:100), u0::T=one(T), u::Vector{T}=[zero(T)], Trace_Mesh::Bool=false,Centro::Bool=false)
     # Functions used in Matrix construction.
     H = [ConformalMap(u0,u)]
     for i=1:3 push!(H,H[end]') end
@@ -215,12 +215,13 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
                All_Eigenvalues[1:length(E),i] = E                     # Storing all eigenvalues in columns in matrix All_Eigenvalues.
           end
           # Calculating an Approximation to the Absolute Error for all Energy values
-          if isnan(enum[1]*enum[2]) == true
+          if isnan(enum[2]) == true
                All_Abs_Error_Approx  = abs(All_Eigenvalues[:,2:end].-All_Eigenvalues[:,1:end-1])
           else
                All_Abs_Error_Approx = zeros(All_Eigenvalues[:,2:end])
-               All_Abs_Error_Approx[[collect(1:round(Int,enum[1]));collect(round(Int,enum[1]+2):end)],:] =  abs(All_Eigenvalues[[collect(1:round(Int,enum[1]));collect(round(Int,enum[1]+2):end)],2:end].-All_Eigenvalues[[collect(1:round(Int,enum[1]));collect(round(Int,enum[1]+2):end)],1:(end-1)])
-               All_Abs_Error_Approx[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues[round(Int,enum[1]+1),2:end] .- enum[2])
+               Index = [collect(1:enum[1]);collect((enum[1]+2):Length)]
+               All_Abs_Error_Approx[Index,:] =  abs(All_Eigenvalues[Index,2:end].-All_Eigenvalues[Index,1:(end-1)])
+               All_Abs_Error_Approx[enum[1]+1,:] =  abs(All_Eigenvalues[enum[1]+1,2:end] .- enum[2])
           end # if loop
           ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
           RESULTS = Convergence_Analysis(All_Eigenvalues,tol,MatrixSizes,All_Abs_Error_Approx)     
@@ -246,15 +247,15 @@ function SincEigen{T<:Number}(q::Function,ρ::Function,domain::Domain{T},β::Vec
           # Calculating an Approximation to the Absolute Error for all Energy values
           All_Abs_Error_Approx_even  = abs(All_Eigenvalues_even[:,2:end].-All_Eigenvalues_even[:,1:end-1])
           All_Abs_Error_Approx_odd  = abs(All_Eigenvalues_odd[:,2:end].-All_Eigenvalues_odd[:,1:end-1])
-          if isnan(enum[1]) == false
-               if  isodd(round(Int,enum[1])) 
-                    enum[1]=(enum[1]+1)/2
-                    All_Abs_Error_Approx_odd[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues_odd[round(Int,enum[1]+1),2:end] .- enum[2])
-               elseif iseven(round(Int,enum[1])) 
-                    enum[1]=(enum[1]+2)/2
-                    All_Abs_Error_Approx_even[round(Int,enum[1]+1),:] =  abs(All_Eigenvalues_even[round(Int,enum[1]+1),2:end] .- enum[2])
-               end # if loop
-          end # if loop
+          if isnan(enum[2]) == false
+            if  isodd(enum[1]) 
+                enum[1]=round(Int,(enum[1]+1)/2)
+                All_Abs_Error_Approx_odd[enum[1]+1,:] =  abs(All_Eigenvalues_odd[enum[1]+1,2:end] .- enum[2])
+            elseif iseven(enum[1]) 
+                enum[1]=round(Int,(enum[1]+2)/2)
+                All_Abs_Error_Approx_even[enum[1]+1,:] =  abs(All_Eigenvalues_even[enum[1]+1,2:end] .- enum[2])
+            end # if loop
+          end
           ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
           RESULTS_odd = Convergence_Analysis(All_Eigenvalues_odd,tol,N+0.0,All_Abs_Error_Approx_odd)
           RESULTS_even = Convergence_Analysis(All_Eigenvalues_even,tol,N.+1.0,All_Abs_Error_Approx_even)
