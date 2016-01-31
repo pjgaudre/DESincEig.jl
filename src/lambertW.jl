@@ -8,17 +8,15 @@ export lambertW
 # Input: x:: Number, Vector or Matrix
 # Output: lambertW(x)
 #
-
 function lambertW(x::Real)
     if x < -exp(-one(x))
         return throw(DomainError())
-    elseif x < 0
-        # TODO: use an alternative approach for x < 0.
-        w0 = one(x)
-    elseif x ≤ e
-        w0 = one(x)
+    elseif x < -0.2576872774
+        w0 = -(5+2*e*x)/3 + sqrt(2*(e*x+one(x)))
+    elseif x ≤ 1.272507835
+        w0 = x-x^2
     else
-        w0 = log(x)
+        w0 = log(x)-log(log(x))
     end
     expw0 = exp(w0)
     w1 = w0 - (w0*expw0 - x)/((w0 + 1)*expw0 -
