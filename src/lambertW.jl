@@ -14,9 +14,9 @@ function lambertW(x::Real)
     elseif x == -exp(-one(x))
         return -one(x)    
     elseif x < 0
-        w0 = e*x/(one(x)+inv(inv(sqrt(2*e*x+2))+inv(e-one(x))-inv(sqrt(2))))
+        w0 = e*x/(1+inv(inv(sqrt(2*e*x+2))+inv(e-1)-inv(sqrt(2))))
     else
-        w0 = log(one(x)+x)*(one(x)-log(one(x)+log(one(x)+x))/(2+log(one(x)+x)))
+        w0 = log(1+x)*(1-log(1+log(1+x))/(2+log(1+x)))
     end
     expw0 = exp(w0)
     w1 = w0 - (w0*expw0 - x)/((w0 + 1)*expw0 -
