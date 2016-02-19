@@ -11,6 +11,8 @@ export lambertW
 function lambertW(x::Real)
     if x < -exp(-one(x))
         return throw(DomainError())
+    elseif x == -exp(-one(x))
+        return -one(x)    
     elseif x < 0
         w0 = e*x/(one(x)+inv(inv(sqrt(2*e*x+2))+inv(e-one(x))-inv(sqrt(2))))
     else
