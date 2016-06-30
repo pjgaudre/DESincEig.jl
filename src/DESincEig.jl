@@ -164,31 +164,7 @@ function SincEigen{T<:Number,S<:Integer}(q::Function,ρ::Function,domain::Domain
     qtilde(t) = ψtilde(domain,H[1][t]).*H[2][t].^2 .+ (3/4).*(H[3][t]./H[2][t]).^2 .-(H[4][t]./2H[2][t]) .+ q(ϕ(t)).*ϕp2(t)
     rhotilde(t) = ρ(ϕ(t)).*ϕp2(t)
     # Determining step sizes and left and right collocation points based on asymptotic information.
-    if γ[1]>γ[2]
-          n = M = Range
-          gam = γ[1]
-          beta = β[1]
-          hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
-          N = max( ceil( (γ[1]/γ[2]).*n .+ log(β[1]/β[2])./ (γ[2].*hoptimal) ) , 0 )
-    elseif γ[2]>γ[1]
-          n = N = Range
-          gam = γ[2]
-          beta = β[2]
-          hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
-          M = max( floor( (γ[2]/γ[1]).*n .+ log(β[2]/β[1])./ (γ[1].*hoptimal) ) , 0 )
-    elseif γ[1] == γ[2] && β[1] > β[2]
-          n = M = Range
-          gam = γ[1]
-          beta = β[1]
-          hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
-          N = ceil( n .+ log(β[1]/β[2])./ (γ[2].*hoptimal) )
-    elseif γ[1] == γ[2] && β[1] < β[2]
-          n = N = Range
-          gam = γ[2]
-          beta = β[2]
-          hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
-          M = floor(n .+ log(β[2]/β[1])./ (γ[1].*hoptimal) )
-    elseif γ[1] == γ[2] && β[1] == β[2]
+    if γ[1] == γ[2] && β[1] == β[2]
           n = N = Range
           M = 1.0*N
           gam = γ[2]
@@ -199,6 +175,10 @@ function SincEigen{T<:Number,S<:Integer}(q::Function,ρ::Function,domain::Domain
           elseif Trace_Mesh == false
                hoptimal = lambertW(pi*dopt*gam*n/beta)./(gam*n)
           end #if loop
+    else
+          hoptimal = min(lambertW(pi*dopt*gamma[2]*Range/beta[2])./(gamma[2]*Range),lambertW(pi*dopt*gamma[1]*Range/beta[1])./(gamma[1]*Range))
+          N = convert(Vector{T},round(log(-log(sqrt(h).*exp(-pi.*dopt./h))./beta[2])./gamma[2]./h))
+          M = convert(Vector{T},round(log(-log(sqrt(h).*exp(-pi*dopt./h))/beta[1])/gamma[1]./h))
     end # if loop
 
     #  INITIAL CONDITIONS
