@@ -165,20 +165,17 @@ function SincEigen{T<:Number,S<:Integer}(q::Function,ρ::Function,domain::Domain
     rhotilde(t) = ρ(ϕ(t)).*ϕp2(t)
     # Determining step sizes and left and right collocation points based on asymptotic information.
     if γ[1] == γ[2] && β[1] == β[2]
-          n = N = Range
-          M = 1.0*N
           if Trace_Mesh == true
                diag_sinc_matrix(t) = (ψtilde(domain,H[1][t] .+ (3/4).*(H[3][t]./H[2][t].^2).^2 .-(H[4][t]./2H[2][t].^3))./ψp(domain,H[1][t]).^2 .+ q(ϕ(t)))./ρ(ϕ(t))
-               hoptimal = [optimize(h->sum( diag_sinc_matrix(collect(-N[i]:N[i])*h).+ (pi^2/(3h^2))./ rhotilde(collect(-N[i]:N[i])*h) ),0.001,(3.0*u0+log(pi*dopt*γ[2]*i/β[2]))./(γ[2]*i)).minimum for i in collect(1:length(n))]
+               hoptimal = [optimize(h->sum( diag_sinc_matrix(collect(-Range[i]:Range[i])*h).+ (pi^2/(3h^2))./ rhotilde(collect(-Range[i]:Range[i])*h) ),0.001,(3.0*u0+log(pi*dopt*γ[2]*i/β[2]))./(γ[2]*i)).minimum for i in collect(1:length(Range))]
           elseif Trace_Mesh == false
                hoptimal = lambertW(pi*dopt*γ[2]*n/β[2])./(γ[2]*n)
           end #if loop
     else
           hoptimal = min(lambertW(pi*dopt*γ[2]*Range/β[2])./(γ[2]*Range),lambertW(pi*dopt*γ[1]*Range/β[1])./(γ[1]*Range))
-          N = convert(Vector{T},round(log(-log(sqrt(h).*exp(-pi.*dopt./h))./β[2])./γ[2]./h))
-          M = convert(Vector{T},round(log(-log(sqrt(h).*exp(-pi*dopt./h))/β[1])/γ[1]./h))
     end # if loop
-
+     N = convert(Vector{T},round(log(-log(sqrt(hoptimal).*exp(-pi*dopt./hoptimal))/β[2])/γ[2]./hoptimal))
+     M = convert(Vector{T},round(log(-log(sqrt(hoptimal).*exp(-pi*dopt./hoptimal))/β[1])/γ[1]./hoptimal))
     #  INITIAL CONDITIONS
     Length = length(Range)                                            # Length of the vectors in the following algorithm given the previous conditions
     if Centro==false
