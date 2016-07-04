@@ -169,7 +169,7 @@ function SincEigen{T<:Number,S<:Integer}(q::Function,ρ::Function,domain::Domain
                diag_sinc_matrix(t) = (ψtilde(domain,H[1][t] .+ (3/4).*(H[3][t]./H[2][t].^2).^2 .-(H[4][t]./2H[2][t].^3))./ψp(domain,H[1][t]).^2 .+ q(ϕ(t)))./ρ(ϕ(t))
                hoptimal = [optimize(h->sum( diag_sinc_matrix(collect(-Range[i]:Range[i])*h).+ (pi^2/(3h^2))./ rhotilde(collect(-Range[i]:Range[i])*h) ),0.001,(3.0*u0+log(pi*dopt*γ[2]*i/β[2]))./(γ[2]*i)).minimum for i in collect(1:length(Range))]
           elseif Trace_Mesh == false
-               hoptimal = lambertW(pi*dopt*γ[2]*n/β[2])./(γ[2]*n)
+               hoptimal = lambertW(pi*dopt*γ[2]*Range/β[2])./(γ[2]*Range)
           end #if loop
     else
           hoptimal = min(lambertW(pi*dopt*γ[2]*Range/β[2])./(γ[2]*Range),lambertW(pi*dopt*γ[1]*Range/β[1])./(γ[1]*Range))
