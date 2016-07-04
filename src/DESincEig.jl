@@ -172,7 +172,7 @@ function SincEigen{T<:Number,S<:Integer}(q::Function,ρ::Function,domain::Domain
                hoptimal = lambertW(pi*dopt*γ[2]*Range/β[2])./(γ[2]*Range)
           end #if loop
     else
-          hoptimal = min(lambertW(pi*dopt*γ[2]*Range/β[2])./(γ[2]*Range),lambertW(pi*dopt*γ[1]*Range/β[1])./(γ[1]*Range))
+          hoptimal = max(lambertW(pi*dopt*γ[2]*Range/β[2])./(γ[2]*Range),lambertW(pi*dopt*γ[1]*Range/β[1])./(γ[1]*Range))
     end # if loop
      N = convert(Vector{T},round(log(-log(sqrt(hoptimal).*exp(-pi*dopt./hoptimal))/β[2])/γ[2]./hoptimal))
      M = convert(Vector{T},round(log(-log(sqrt(hoptimal).*exp(-pi*dopt./hoptimal))/β[1])/γ[1]./hoptimal))
