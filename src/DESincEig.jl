@@ -86,6 +86,16 @@ Domain = Infinite2{Float64}().
 Domain = SemiInfinite1{Float64}().
 =#
 
+type SincResults{T}
+     RESULTS::Matrix{T}
+     All_Abs_Error_Approx::Matrix{T}
+     hoptimal::Vector{T}
+     N::Vector{T}
+     MatrixSizes::Vector{T}
+end
+
+
+
 export ψtilde
 ψtilde(d::Finite,t) = 0*t+1
 ψtilde(d::Infinite1,t) = 0.25.-0.75.*sech(t).^2
@@ -200,7 +210,7 @@ function SincEigen{T<:Number,S<:Integer}(q::Function,ρ::Function,domain::Domain
           end # if loop
           ## Ouputing the convergence analysis of the algorithm given the number of iterations and the tolerance level tol.
           RESULTS = Convergence_Analysis(All_Eigenvalues,tol,MatrixSizes,All_Abs_Error_Approx)     
-          (RESULTS, All_Abs_Error_Approx, hoptimal, N, MatrixSizes)
+          return SincResults(RESULTS, All_Abs_Error_Approx, hoptimal, N, MatrixSizes)
     elseif Centro==true
           All_Eigenvalues_even = zeros(round(Int,Range[end]+1),Length)
           All_Eigenvalues_odd = zeros(round(Int,Range[end]),Length)
@@ -237,7 +247,7 @@ function SincEigen{T<:Number,S<:Integer}(q::Function,ρ::Function,domain::Domain
           RESULTS_odd[:,1] = 2.*RESULTS_odd[:,1].+1
           RESULTS_even[:,1] = 2.*RESULTS_even[:,1]
           RESULTS = sortrows([RESULTS_odd;RESULTS_even])
-          (RESULTS, (All_Abs_Error_Approx_even,All_Abs_Error_Approx_odd), hoptimal, N, (N+1,N))     
+          return SincResults(RESULTS, (All_Abs_Error_Approx_even,All_Abs_Error_Approx_odd), hoptimal, N, (N+1,N))     
      end
 end
 
