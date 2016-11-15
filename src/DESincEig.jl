@@ -226,7 +226,7 @@ function SincEigen{T<:Number,S<:Integer}(q::Function,ρ::Function,domain::Domain
                x = sqrt(2).*Temp[index+1,:]
                # Solving Generalized eigenvalue problems.
                E_odd = eigvals(Symmetric(A-JC),Symmetric(diagm(rhotilde(k*h))))
-               E_even = eigvals(Symmetric([qc  x ; x' A+JC]),Symmetric(diagm(rhotilde([0.0;k]*h))))
+               E_even = eigvals(Symmetric([qc  x' ; x A+JC]),Symmetric(diagm(rhotilde([0.0;k]*h))))
                All_Eigenvalues_even[1:length(E_even),i] = E_even
                All_Eigenvalues_odd[1:length(E_odd),i] = E_odd
           end
