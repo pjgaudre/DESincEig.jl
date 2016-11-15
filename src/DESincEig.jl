@@ -216,13 +216,14 @@ function SincEigen{T<:Number,S<:Integer}(q::Function,ρ::Function,domain::Domain
           All_Eigenvalues_odd = zeros(round(Int,Range[end]),Length)
           for i = 1:Length
                h = hoptimal[i]
-               k = collect(-N[i]:-1).*1.0
-               j = collect(-N[i]:N[i]).*1.0
+               index = convert(Int,N[i])
+               k = collect(-index:-1).*1.0
+               j = collect(-index:index).*1.0
                Temp = -sinc(2,k'.-j)./h^2
-               A = diagm(qtilde(k*h)) .+ Temp[1:N[i],:]
-               JC = flipdim(Temp[N[i]+2:2N[i]+1,:],1)
+               A = diagm(qtilde(k*h)) .+ Temp[1:index,:]
+               JC = flipdim(Temp[index+2:2index+1,:],1)
                qc = qtilde(0.0).+ (pi^2/(3h^2))
-               x = sqrt(2).*Temp[N[i]+1,:]
+               x = sqrt(2).*Temp[index+1,:]
                # Solving Generalized eigenvalue problems.
                E_odd = eigvals(Symmetric(A-JC),Symmetric(diagm(rhotilde(k*h))))
                E_even = eigvals(Symmetric([qc  x ; x' A+JC]),Symmetric(diagm(rhotilde([0.0;k]*h))))
