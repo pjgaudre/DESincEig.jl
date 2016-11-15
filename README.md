@@ -70,6 +70,22 @@ Necessary parameters
 6. d:: Number,           min{ π/2max{γL,γR} , s }
 ```
 
+The result from using the main function `SincEigen` is a `DESincEig.SincResults` object containing five different components.
+```Julia
+1. RESULTS : Matrix containing all the converged eigenvalue
+      First column contains the eigenvalue number
+      Second column contains the matrix size needed to achieve desired acurracy: tol
+      Third column contains the value of the conveged eigenvalue
+      Fourth column contains an approximation to the absolute error.
+2. N : Vector containing the values of N used in the DESCM
+3. hoptimal : Vector containing the optimal meshsizes used for the values of N
+4. MatrixSizes : Vector(s) of Matrix sizes at every iteration. if Centro = true is use, two vectors are returned, matrix sizes for the even eigenvalues and matrix size for the odd eigenvalues.
+5. All_Abs_Error_Approx : Matrix(ces) of approximations to the absolute errors at every iteration. if Centro = true is use, two Matrices are returned, one for the even eigenvalues and one for the odd eigenvalues.
+```
+                 
+          
+
+
 
 ### Example 1 from <a href="http://arxiv.org/abs/1409.7471v3">[2]</a>
 Suppose we are interested in computing the eigenvalues of the Laguerre equation:
@@ -78,7 +94,7 @@ Suppose we are interested in computing the eigenvalues of the Laguerre equation:
 ```
 we use the package function `SincEigen` to calculate the eigenvalues:
 ```julia
-SincEigen( x -> (35/4)./x.^2  .- 2 .+ x.^2 /16 , ones , SemiInfinite1{Float64}() , [1.5,0.03125] , [1.0,2.0] , pi/4 )
+S = SincEigen( x -> (35/4)./x.^2  .- 2 .+ x.^2 /16 , ones , SemiInfinite1{Float64}() , [1.5,0.03125] , [1.0,2.0] , pi/4 )
 ```
 
 ### Example 2 from <a href="http://dx.doi.org/10.1016/j.aop.2015.05.026">[5]</a>
@@ -92,7 +108,7 @@ V(x) = x.^2 + x.^4
 ```
 we use the package function `SincEigen` to calculate the eigenvalues:
 ```julia
-SincEigen(V, ones, Infinite2{Float64}(), [0.125,0.125] , [2.0,2.0] , pi/4 )
+S = SincEigen(V, ones, Infinite2{Float64}(), [0.125,0.125] , [2.0,2.0] , pi/4 )
 ```
 
 # References:
