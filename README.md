@@ -95,6 +95,7 @@ Suppose we are interested in computing the eigenvalues of the Laguerre equation:
 we use the package function `SincEigen` to calculate the eigenvalues:
 ```julia
 S = SincEigen( x -> (35/4)./x.^2  .- 2 .+ x.^2 /16 , ones , SemiInfinite1{Float64}() , [1.5,0.03125] , [1.0,2.0] , pi/4 )
+S.RESULTS
 ```
 
 ### Example 2 from <a href="http://dx.doi.org/10.1016/j.aop.2015.05.026">[5]</a>
@@ -109,6 +110,7 @@ V(x) = x.^2 + x.^4
 we use the package function `SincEigen` to calculate the eigenvalues:
 ```julia
 S = SincEigen(V, ones, Infinite2{Float64}(), [0.125,0.125] , [2.0,2.0] , pi/4 )
+S.RESULTS
 ```
 
 # References:
