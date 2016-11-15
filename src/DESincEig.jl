@@ -88,10 +88,10 @@ Domain = SemiInfinite1{Float64}().
 
 type SincResults{T}
      RESULTS::Matrix{T}
-     All_Abs_Error_Approx::Matrix{T}
+     All_Abs_Error_Approx
      hoptimal::Vector{T}
      N::Vector{T}
-     MatrixSizes::Vector{T}
+     MatrixSizes
 end
 
 
