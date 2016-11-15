@@ -247,7 +247,7 @@ function SincEigen{T<:Number,S<:Integer}(q::Function,ρ::Function,domain::Domain
           RESULTS_odd[:,1] = 2.*RESULTS_odd[:,1].+1
           RESULTS_even[:,1] = 2.*RESULTS_even[:,1]
           RESULTS = sortrows([RESULTS_odd;RESULTS_even])
-          return SincResults(RESULTS, (All_Abs_Error_Approx_even,All_Abs_Error_Approx_odd), hoptimal, N, (N+1,N))     
+          return (RESULTS, (All_Abs_Error_Approx_even,All_Abs_Error_Approx_odd), hoptimal, N, (N+1,N))     
      end
 end
 
