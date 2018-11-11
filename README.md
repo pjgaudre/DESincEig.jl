@@ -1,7 +1,9 @@
 # DESincEig.jl
 
 #############################################
+
 Note* : I have not made changes to this code since the end of my PhD (December 2016). There are no guarantees.  
+
 #############################################
 
 The purpose of this `Julia` package is to provide an efficient fast general purpose differential eigenvalue solver package, supporting the canonical interval, and semi-infinite and infinite domains for Sturm-Liouville problems. The following algorithm utilizes the Double Exponential Sinc-Collocation method. This package allows the user to consider other domains by declaring a new instance of the `SincFun` type `Domain`.
